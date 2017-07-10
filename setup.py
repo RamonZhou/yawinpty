@@ -1,6 +1,7 @@
 from distutils.core import setup
 from distutils.extension import Extension
 from distutils.command.build_ext import build_ext
+from Cython.Build import cythonize
 from subprocess import check_output
 from os import environ
 
@@ -27,12 +28,11 @@ setup(
     name = 'pywinpty',
     cmdclass = {
         'build_ext': build_winpty},
-    ext_modules = [
+    ext_modules = cythonize(
         WinptyExtension('pywinpty',
             define_macros = [
                 ('UNICODE', None),
                 ('_UNICODE', None),
-                ('_WIN32_WINNT', '0x0501'),
                 ('NOMINMAX', None),
                 ('COMPILING_WINPTY_DLL', None)],
             include_dirs = [
@@ -53,5 +53,9 @@ setup(
                 'winpty/src/shared/WindowsVersion.cc',
                 'winpty/src/shared/WinptyAssert.cc',
                 'winpty/src/shared/WinptyException.cc',
-                'winpty/src/shared/WinptyVersion.cc'],
-            language='c++')])
+                'winpty/src/shared/WinptyVersion.cc',
+                'pywinpty.pyx'],
+            language='c++'),
+        compiler_directives = {
+            'embedsignature': True,
+            'language_level': 3}))

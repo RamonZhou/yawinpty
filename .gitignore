@@ -137,3 +137,6 @@ $RECYCLE.BIN/
 *.lnk
 
 # End of https://www.gitignore.io/api/vim,python,windows
+
+# Cython generator code
+pywinpty.cpp
