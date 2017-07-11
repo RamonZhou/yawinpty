@@ -249,8 +249,10 @@ cdef class Config:
             return object.__getattribute__(self, attr)
 
 cdef class Pty:
+    """class Pty to handle winpty object"""
     cdef winpty.winpty_t* _pty
     def __init__(self, Config config = Config()):
+        """start agent with `config`"""
         cdef winpty.winpty_error_ptr_t err
         with nogil:
             self._pty = winpty.winpty_open(config._cfg, &err)
@@ -260,8 +262,21 @@ cdef class Pty:
         with nogil:
             winpty.winpty_free(self._pty)
     def conin_name(self):
+        """get conin name"""
         return ws2str(winpty.winpty_conin_name(self._pty))
     def conout_name(self):
+        """get conout name"""
         return ws2str(winpty.winpty_conout_name(self._pty))
     def conerr_name(self):
+        """get conerr name"""
         return ws2str(winpty.winpty_conerr_name(self._pty))
+    def agent_process_id(self):
+        """get process id of the agent"""
+        return winpty.GetProcessId(winpty.winpty_agent_process(self._pty))
+    def set_size(self, cols, rows):
+        """set the size of terminal"""
+        cdef winpty.winpty_error_ptr_t err
+        cdef winpty.BOOL rs = winpty.winpty_set_size(self._pty, cols, rows, &err)
+        if err != NULL:
+            WinptyError._raise_errobj(create_ErrorObject(err))
+        return rs != 0

@@ -18,6 +18,7 @@ cdef extern from 'windows.h' nogil:
     cdef int WC_ERR_INVALID_CHARS
     cdef int WideCharToMultiByte(UINT, DWORD, LPCWSTR, int, LPSTR, int, LPCSTR, LPBOOL)
     cdef DWORD GetLastError()
+    cdef DWORD GetProcessId(HANDLE)
 
 cdef extern from 'winpty.h' nogil:
     cdef int WINPTY_ERROR_SUCCESS
@@ -53,4 +54,5 @@ cdef extern from 'winpty.h' nogil:
     cdef LPCWSTR winpty_conin_name(winpty_t* wp)
     cdef LPCWSTR winpty_conout_name(winpty_t* wp)
     cdef LPCWSTR winpty_conerr_name(winpty_t* wp)
+    cdef BOOL winpty_set_size(winpty_t* wp, int cols, int rows, winpty_error_ptr_t* err)
     cdef void winpty_free(winpty_t* wp)
