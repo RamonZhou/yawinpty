@@ -242,7 +242,26 @@ cdef class Config:
     flag = _Flag()
     mouse_mode = _MouseMode()
     def __getattribute__(self, attr):
+        """stop getting 'flag' & 'mouse_mode' from an instance"""
         if attr in ('flag', 'mouse_mode'):
             raise AttributeError("'{}' object has no attribute '{}'".format(type(self).__name__, attr))
         else:
             return object.__getattribute__(self, attr)
+
+cdef class Pty:
+    cdef winpty.winpty_t* _pty
+    def __init__(self, Config config = Config()):
+        cdef winpty.winpty_error_ptr_t err
+        with nogil:
+            self._pty = winpty.winpty_open(config._cfg, &err)
+        if err != NULL:
+            WinptyError._raise_errobj(create_ErrorObject(err))
+    def __dealloc__(self):
+        with nogil:
+            winpty.winpty_free(self._pty)
+    def conin_name(self):
+        return ws2str(winpty.winpty_conin_name(self._pty))
+    def conout_name(self):
+        return ws2str(winpty.winpty_conout_name(self._pty))
+    def conerr_name(self):
+        return ws2str(winpty.winpty_conerr_name(self._pty))

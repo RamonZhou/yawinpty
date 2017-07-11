@@ -1,7 +1,7 @@
 from libc.stddef cimport wchar_t
 from libc.stdlib cimport malloc, free
 
-cdef extern from 'windows.h':
+cdef extern from 'windows.h' nogil:
     ctypedef wchar_t WCHAR
     ctypedef char CHAR
     ctypedef int BOOL
@@ -12,12 +12,14 @@ cdef extern from 'windows.h':
     ctypedef unsigned long DWORD
     ctypedef unsigned int UINT
     ctypedef unsigned long long UINT64
+    ctypedef void* PVOID
+    ctypedef PVOID HANDLE
     cdef int CP_UTF8
     cdef int WC_ERR_INVALID_CHARS
     cdef int WideCharToMultiByte(UINT, DWORD, LPCWSTR, int, LPSTR, int, LPCSTR, LPBOOL)
     cdef DWORD GetLastError()
 
-cdef extern from 'winpty.h':
+cdef extern from 'winpty.h' nogil:
     cdef int WINPTY_ERROR_SUCCESS
     cdef int WINPTY_ERROR_OUT_OF_MEMORY
     cdef int WINPTY_ERROR_SPAWN_CREATE_PROCESS_FAILED
@@ -33,13 +35,22 @@ cdef extern from 'winpty.h':
     ctypedef winpty_error_s winpty_error_t
     ctypedef winpty_error_t* winpty_error_ptr_t
     cdef winpty_result_t winpty_error_code(winpty_error_ptr_t err)
-    cdef LPCWSTR winpty_error_msg(winpty_error_ptr_t err);
-    cdef void winpty_error_free(winpty_error_ptr_t err);
+    cdef LPCWSTR winpty_error_msg(winpty_error_ptr_t err)
+    cdef void winpty_error_free(winpty_error_ptr_t err)
     cdef struct winpty_config_s:
         pass
     ctypedef winpty_config_s winpty_config_t
     cdef winpty_config_t* winpty_config_new(UINT64 agentFlags, winpty_error_ptr_t* err)
-    cdef void winpty_config_free(winpty_config_t* cfg);
-    cdef void winpty_config_set_initial_size(winpty_config_t* cfg, int cols, int rows);
-    cdef void winpty_config_set_mouse_mode(winpty_config_t* cfg, int mouseMode);
-    cdef void winpty_config_set_agent_timeout(winpty_config_t* cfg, DWORD timeoutMs);
+    cdef void winpty_config_free(winpty_config_t* cfg)
+    cdef void winpty_config_set_initial_size(winpty_config_t* cfg, int cols, int rows)
+    cdef void winpty_config_set_mouse_mode(winpty_config_t* cfg, int mouseMode)
+    cdef void winpty_config_set_agent_timeout(winpty_config_t* cfg, DWORD timeoutMs)
+    cdef struct winpty_s:
+        pass
+    ctypedef winpty_s winpty_t
+    cdef winpty_t* winpty_open(const winpty_config_t* cfg, winpty_error_ptr_t* err)
+    cdef HANDLE winpty_agent_process(winpty_t* wp)
+    cdef LPCWSTR winpty_conin_name(winpty_t* wp)
+    cdef LPCWSTR winpty_conout_name(winpty_t* wp)
+    cdef LPCWSTR winpty_conerr_name(winpty_t* wp)
+    cdef void winpty_free(winpty_t* wp)
