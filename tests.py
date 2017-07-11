@@ -21,6 +21,26 @@ class YawinptyTest(unittest.TestCase):
             self.assertIsInstance(err_inst, err_type)
             self.assertEqual(err_inst.code, code)
             self.assertEqual(err_inst.args[0], 'awd')
+    def test_echo(self):
+        """test echo (IO)"""
+        pty = Pty(Config(Config.flag.plain_output))
+        pty.spawn(SpawnConfig(SpawnConfig.flag.auto_shutdown, cmdline = r'python tests\echo.py'))
+        exc = []
+        with open(pty.conin_name(), 'w') as fin:
+            for i in range(32):
+                tmp = []
+                for j in range(i):
+                    st = str(j)
+                    tmp.append(st)
+                    fin.write(st)
+                fin.write('\n')
+                exc += [''.join(tmp)] * 2
+            fin.write('\x1a\n')
+        with open(pty.conout_name(), 'r') as fout:
+            out = fout.read()
+        exc += ['^Z', '']
+        print(out)
+        self.assertEqual('\n'.join(exc), out)
 
 if __name__ == '__main__':
     unittest.main()
