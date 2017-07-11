@@ -39,8 +39,15 @@ class YawinptyTest(unittest.TestCase):
         with open(pty.conout_name(), 'r') as fout:
             out = fout.read()
         exc += ['^Z', '']
-        print(out)
         self.assertEqual('\n'.join(exc), out)
+    def test_spawn_fail(self):
+        """test behavior when spawn fail"""
+        try:
+            Pty().spawn(SpawnConfig(appname = 'notexists'))
+        except SpecifiedSpawnCreateProcessFailed as e:
+            self.assertEqual(e.winerror, 2)
+        else:
+            self.assertTrue(False)
 
 if __name__ == '__main__':
     unittest.main()
