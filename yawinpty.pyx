@@ -443,7 +443,9 @@ cdef class Pty:
         cdef winpty.HANDLE process, thread
         cdef winpty.DWORD ec
         cdef winpty.winpty_error_ptr_t err
-        cdef winpty.BOOL rv = winpty.winpty_spawn(self._pty, spawn_config._cfg, &process, &thread, &ec, &err)
+        cdef winpty.BOOL rv
+        with nogil:
+            rv = winpty.winpty_spawn(self._pty, spawn_config._cfg, &process, &thread, &ec, &err)
         if err != NULL:
             errobj = create_ErrorObject(err)
             err_type = WinptyError._from_errobj(errobj)
