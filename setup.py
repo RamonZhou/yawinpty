@@ -66,6 +66,7 @@ setup(
     author = 'TitanSnow',
     author_email = 'tttnns1024@gmail.com',
     url = 'https://github.com/PSoWin/yawinpty',
+    license='MIT',
     cmdclass = {
         'build_ext': build_winpty,
         'build_clib': build_winpty_agent},
