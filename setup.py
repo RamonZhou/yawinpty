@@ -60,12 +60,12 @@ class build_winpty_agent(build_clib):
                                           libraries=build_info.get('libraries'))
 
 setup(
-    name = 'pywinpty',
+    name = 'yawinpty',
     cmdclass = {
         'build_ext': build_winpty,
         'build_clib': build_winpty_agent},
     ext_modules = cythonize(
-        WinptyExtension('pywinpty',
+        WinptyExtension('yawinpty',
             define_macros = [
                 ('UNICODE', None),
                 ('_UNICODE', None),
@@ -90,7 +90,7 @@ setup(
                 'winpty/src/shared/WinptyAssert.cc',
                 'winpty/src/shared/WinptyException.cc',
                 'winpty/src/shared/WinptyVersion.cc',
-                'pywinpty.pyx'],
+                'yawinpty.pyx'],
             language='c++'),
         compiler_directives = {
             'embedsignature': True,
