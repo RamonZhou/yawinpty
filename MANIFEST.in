@@ -1,0 +1,11 @@
+include LICENSE
+include requirements.txt
+include setup.py
+include winpty.pxd
+include yawinpty.cpp
+include yawinpty.pyx
+
+recursive-include winpty/src *.cc
+recursive-include winpty/src *.h
+include winpty/src/shared/GetCommitHash.bat
+include winpty/src/shared/UpdateGenVersion.bat
