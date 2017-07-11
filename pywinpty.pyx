@@ -33,9 +33,13 @@ cdef class _ErrorObject:
         winpty.winpty_error_free(self._errobj)
     def get_code(self):
         """get error code from errobj"""
+        if self._errobj == NULL:
+            raise TypeError('NULL is not a valid errobj')
         return winpty.winpty_error_code(self._errobj)
     def get_msg(self):
         """get error msg from errobj"""
+        if self._errobj == NULL:
+            raise TypeError('NULL is not a valid errobj')
         return ws2str(winpty.winpty_error_msg(self._errobj))
 cdef create_ErrorObject(winpty.winpty_error_ptr_t errobj):
     """create _ErrorObject with `winpty_error_ptr_t errobj`"""
@@ -134,3 +138,111 @@ class AgentCreationFailed(WinptyError):
     def __init__(self, err_msg):
         """init AgentCreationFailed with `err_msg`"""
         super().__init__(winpty.WINPTY_ERROR_AGENT_CREATION_FAILED, err_msg)
+
+class _Flag:
+    """class _Flag contains flags
+
+    conerr
+    ======
+     Create a new screen buffer (connected to the "conerr" terminal pipe) and
+     pass it to child processes as the STDERR handle.  This flag also prevents
+     the agent from reopening CONOUT$ when it polls -- regardless of whether the
+     active screen buffer changes, winpty continues to monitor the original
+     primary screen buffer.
+
+    plain_output
+    ============
+     Don't output escape sequences.
+
+    color_escapes
+    =============
+     Do output color escape sequences.  These escapes are output by default, but
+     are suppressed with WINPTY_FLAG_PLAIN_OUTPUT.  Use this flag to reenable
+     them.
+
+    allow_curproc_desktop_creation
+    ==============================
+     On XP and Vista, winpty needs to put the hidden console on a desktop in a
+     service window station so that its polling does not interfere with other
+     (visible) console windows.  To create this desktop, it must change the
+     process' window station (i.e. SetProcessWindowStation) for the duration of
+     the winpty_open call.  In theory, this change could interfere with the
+     winpty client (e.g. other threads, spawning children), so winpty by default
+     spawns a special agent process to create the hidden desktop.  Spawning
+     processes on Windows is slow, though, so if
+     WINPTY_FLAG_ALLOW_CURPROC_DESKTOP_CREATION is set, winpty changes this
+     process' window station instead.
+     See https://github.com/rprichard/winpty/issues/58.
+
+    mask
+    ====
+     mask of flags"""
+
+    conerr=             0x1
+    plain_output=       0x2
+    color_escapes=      0x4
+    allow_curproc_desktop_creation=0x8
+    mask = (0 \
+        | conerr \
+        | plain_output \
+        | color_escapes \
+        | allow_curproc_desktop_creation \
+    )
+class _MouseMode:
+    """class _MouseMode contains mouse modes
+
+    none
+    ====
+     QuickEdit mode is initially disabled, and the agent does not send mouse
+     mode sequences to the terminal.  If it receives mouse input, though, it
+     still writes MOUSE_EVENT_RECORD values into CONIN.
+
+    auto
+    ====
+     QuickEdit mode is initially enabled.  As CONIN enters or leaves mouse
+     input mode (i.e. where ENABLE_MOUSE_INPUT is on and ENABLE_QUICK_EDIT_MODE
+     is off), the agent enables or disables mouse input on the terminal.
+
+     This is the default mode.
+
+    force
+    =====
+     QuickEdit mode is initially disabled, and the agent enables the terminal's
+     mouse input mode.  It does not disable terminal mouse mode (until exit)."""
+
+    none=         0
+    auto=         1
+    force=        2
+
+cdef class Config:
+    """class Config to handle a winpty config object"""
+    cdef winpty.winpty_config_t* _cfg
+    def __init__(self, *flags):
+        """init Config with `flags`
+        `flags` is combine of `Config.flag.*`"""
+        cdef winpty.UINT64 rf = 0
+        for flag in flags:
+            rf |= flag
+        cdef winpty.winpty_error_ptr_t err
+        self._cfg = winpty.winpty_config_new(rf, &err)
+        if err != NULL:
+            WinptyError._raise_errobj(create_ErrorObject(err))
+    def __dealloc__(self):
+        winpty.winpty_config_free(self._cfg)
+    def set_initial_size(self, cols, rows):
+        """set initial size"""
+        winpty.winpty_config_set_initial_size(self._cfg, cols, rows)
+    def set_mouse_mode(self, mouse_mode):
+        """set mouse mode to `mouse_mode` which is one of `Config.mouse_mode`"""
+        winpty.winpty_config_set_mouse_mode(self._cfg, mouse_mode)
+    def set_agent_timeout(self, timeout):
+        """Amount of time (in ms) to wait for the agent to startup and to wait for any given
+        agent RPC request.  Must be greater than 0.  Can be INFINITE."""
+        winpty.winpty_config_set_agent_timeout(self._cfg, timeout)
+    flag = _Flag()
+    mouse_mode = _MouseMode()
+    def __getattribute__(self, attr):
+        if attr in ('flag', 'mouse_mode'):
+            raise AttributeError("'{}' object has no attribute '{}'".format(type(self).__name__, attr))
+        else:
+            return object.__getattribute__(self, attr)
