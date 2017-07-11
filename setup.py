@@ -61,6 +61,11 @@ class build_winpty_agent(build_clib):
 
 setup(
     name = 'yawinpty',
+    version = '0.4.3-0.0.0-dev0',
+    description = 'yet another winpty binding for python',
+    author = 'TitanSnow',
+    author_email = 'tttnns1024@gmail.com',
+    url = 'https://github.com/PSoWin/yawinpty',
     cmdclass = {
         'build_ext': build_winpty,
         'build_clib': build_winpty_agent},
