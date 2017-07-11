@@ -1,5 +1,10 @@
 import unittest
 from yawinpty import *
+from os import environ
+from random import randint
+import pickle
+
+cmd = environ['comspec']
 
 class YawinptyTest(unittest.TestCase):
     """tests for yawinpty"""
@@ -48,6 +53,21 @@ class YawinptyTest(unittest.TestCase):
             self.assertEqual(e.winerror, 2)
         else:
             self.assertTrue(False)
+    def test_env(self):
+        """test env passing"""
+        env = {**environ}
+        def randstr():
+            return ''.join([chr(randint(ord('A'), ord('Z'))) for i in range(randint(1, 1024))])
+        for i in range(1024):
+            key = randstr()
+            if key not in env:
+                env[key] = randstr()
+        pty = Pty()
+        pty.spawn(SpawnConfig(SpawnConfig.flag.auto_shutdown, cmdline = r'python tests\env.py', env = env))
+        with open(pty.conout_name(), 'rb') as f:
+            f.read()
+        with open('env', 'rb') as f:
+            self.assertEqual(pickle.load(f), env)
 
 if __name__ == '__main__':
     unittest.main()
