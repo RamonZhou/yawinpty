@@ -294,6 +294,38 @@ cdef class Config:
         else:
             return object.__getattribute__(self, attr)
 
+class _SpawnFlag:
+    """class _SpawnFlag contains spawn flags
+
+    auto_shutdown
+    =============
+     If the spawn is marked "auto-shutdown", then the agent shuts down console
+     output once the process exits.  The agent stops polling for new console
+     output, and once all pending data has been written to the output pipe, the
+     agent closes the pipe.  (At that point, the pipe may still have data in it,
+     which the client may read.  Once all the data has been read, further reads
+     return EOF.)
+
+    exit_after_shutdown
+    ===================
+     After the agent shuts down output, and after all output has been written
+     into the pipe(s), exit the agent by closing the console.  If there any
+     surviving processes still attached to the console, they are killed.
+
+     Note: With this flag, an RPC call (e.g. winpty_set_size) issued after the
+     agent exits will fail with an I/O or dead-agent error.
+
+    mask
+    ====
+    mask of flags"""
+
+    auto_shutdown=1
+    exit_after_shutdown=2
+    mask=(0 \
+        | auto_shutdown \
+        | exit_after_shutdown \
+    )
+
 cdef class SpawnConfig:
     """class SpawnConfig to handle spawn config object"""
     cdef winpty.winpty_spawn_config_t* _cfg
@@ -357,6 +389,13 @@ cdef class SpawnConfig:
             winpty.free(temp)
     def __dealloc__(self):
         winpty.winpty_spawn_config_free(self._cfg)
+    flag = _SpawnFlag()
+    def __getattribute__(self, attr):
+        """stop getting 'flag' from an instance"""
+        if attr == 'flag':
+            raise AttributeError("'{}' object has no attribute '{}'".format(type(self).__name__, attr))
+        else:
+            return object.__getattribute__(self, attr)
 
 cdef class Pty:
     """class Pty to handle winpty object"""
