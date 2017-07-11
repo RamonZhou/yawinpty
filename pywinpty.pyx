@@ -1,7 +1,7 @@
 cimport winpty
 
 cdef ws2str(winpty.LPCWSTR wmsg):
-    """convert wchar_t* to str"""
+    """convert LPCWSTR to str"""
     if wmsg == NULL:
         return None
     if wmsg[0] == 0:
@@ -21,6 +21,41 @@ cdef ws2str(winpty.LPCWSTR wmsg):
     winpty.free(amsg)
     return msg.decode('utf8')
 
+cdef winpty.LPWSTR as2ws(const char* amsg):
+    """convert char* to LPWSTR
+    must free the result"""
+    cdef winpty.LPWSTR  wmsg
+    if amsg == NULL:
+        return NULL
+    if amsg[0] == 0:
+        wmsg = <winpty.LPWSTR>winpty.malloc(sizeof(winpty.WCHAR))
+        if wmsg == NULL:
+            raise MemoryError('malloc failed')
+        wmsg[0] = 0
+        return wmsg
+    cdef int sz = winpty.MultiByteToWideChar(winpty.CP_UTF8, winpty.MB_ERR_INVALID_CHARS, amsg, -1, NULL, 0)
+    if sz == 0:
+        raise OSError(None, None, None, winpty.GetLastError())
+    wmsg = <winpty.LPWSTR>winpty.malloc(sizeof(winpty.WCHAR) * (sz + 1))
+    if wmsg == NULL:
+        raise MemoryError('malloc failed')
+    cdef int rc = winpty.MultiByteToWideChar(winpty.CP_UTF8, winpty.MB_ERR_INVALID_CHARS, amsg, -1, wmsg, sz)
+    if rc == 0:
+        winpty.free(wmsg)
+        raise OSError(None, None, None, winpty.GetLastError())
+    wmsg[sz] = 0
+    return wmsg
+
+cdef winpty.LPWSTR str2ws(st):
+    if isinstance(st, str):
+        st = st.encode('utf8')
+    if isinstance(st, bytes):
+        return as2ws(st)
+    elif st is None:
+        return NULL
+    else:
+        raise TypeError('str/bytes/None excepted, {} got'.format(type(st).__name__))
+
 cdef class _ErrorObject:
     """errobj handle class for internal use"""
     cdef winpty.winpty_error_ptr_t _errobj
@@ -34,12 +69,12 @@ cdef class _ErrorObject:
     def get_code(self):
         """get error code from errobj"""
         if self._errobj == NULL:
-            raise TypeError('NULL is not a valid errobj')
+            raise ValueError('NULL is not a valid errobj')
         return winpty.winpty_error_code(self._errobj)
     def get_msg(self):
         """get error msg from errobj"""
         if self._errobj == NULL:
-            raise TypeError('NULL is not a valid errobj')
+            raise ValueError('NULL is not a valid errobj')
         return ws2str(winpty.winpty_error_msg(self._errobj))
 cdef create_ErrorObject(winpty.winpty_error_ptr_t errobj):
     """create _ErrorObject with `winpty_error_ptr_t errobj`"""
@@ -222,7 +257,7 @@ cdef class Config:
         `flags` is combine of `Config.flag.*`"""
         cdef winpty.UINT64 rf = 0
         for flag in flags:
-            rf |= flag
+            rf |= <winpty.UINT64>flag
         cdef winpty.winpty_error_ptr_t err
         self._cfg = winpty.winpty_config_new(rf, &err)
         if err != NULL:
@@ -247,6 +282,70 @@ cdef class Config:
             raise AttributeError("'{}' object has no attribute '{}'".format(type(self).__name__, attr))
         else:
             return object.__getattribute__(self, attr)
+
+cdef class SpawnConfig:
+    """class SpawnConfig to handle spawn config object"""
+    cdef winpty.winpty_spawn_config_t* _cfg
+    def __init__(self, appname = None, cmdline = None, cwd = None, env = None, *spawnFlags):
+        """init SpawnConfig
+        `spawnFlags` is a combine of `SpawnConfig.flag.*`
+        `env` is like `{'VAR1': 'VAL1', 'VAR2': 'VAL2'}`
+        N.B.: If you want to gather all of the child's output, you may want the
+        `auto_shutdown` flag."""
+        cdef winpty.LPWSTR wappname = NULL, wcmdline = NULL, wcwd = NULL, wenv = NULL, temp = NULL
+        cdef winpty.size_t envsz = 0
+        cdef winpty.size_t tmpsz = 0
+        cdef winpty.size_t newsz = 0
+        cdef winpty.UINT64 rf = 0
+        cdef winpty.winpty_error_ptr_t err
+        try:
+            wappname = str2ws(appname)
+            wcmdline = str2ws(cmdline)
+            wcwd = str2ws(cwd)
+            if env:
+                for var, val in env.items():
+                    temp = str2ws(var)
+                    if temp == NULL:
+                        raise ValueError('NULL is not valid')
+                    tmpsz = winpty.wcslen(temp)
+                    newsz = envsz + sizeof(winpty.WCHAR) * (tmpsz + 1)
+                    wenv = <winpty.LPWSTR>winpty.realloc(wenv, newsz)
+                    if wenv == NULL:
+                        raise MemoryError('realloc failed')
+                    winpty.memcpy((<char*>wenv) + envsz, temp, sizeof(winpty.WCHAR) * tmpsz)
+                    (<winpty.LPWSTR>((<char*>wenv) + newsz - sizeof(winpty.WCHAR)))[0] = <winpty.WCHAR>b'='
+                    envsz = newsz
+                    winpty.free(temp)
+                    temp = NULL
+                    temp = str2ws(val)
+                    if temp == NULL:
+                        raise ValueError('NULL is not valid')
+                    tmpsz = winpty.wcslen(temp)
+                    newsz = envsz + sizeof(winpty.WCHAR) * (tmpsz + 1)
+                    wenv = <winpty.LPWSTR>winpty.realloc(wenv, newsz)
+                    if wenv == NULL:
+                        raise MemoryError('realloc failed')
+                    winpty.memcpy((<char*>wenv) + envsz, temp, newsz - envsz)
+                    envsz = newsz
+                    winpty.free(temp)
+                    temp = NULL
+                wenv = <winpty.LPWSTR>winpty.realloc(wenv, envsz + sizeof(winpty.WCHAR))
+                if wenv == NULL:
+                    raise MemoryError('realloc failed')
+                (<winpty.LPWSTR>((<char*>wenv) + envsz))[0] = 0
+            for flag in spawnFlags:
+                rf |= <winpty.UINT64>flag
+            self._cfg = winpty.winpty_spawn_config_new(rf, wappname, wcmdline, wcwd, wenv, &err)
+            if err != NULL:
+                WinptyError._raise_errobj(create_ErrorObject(err))
+        finally:
+            winpty.free(wappname)
+            winpty.free(wcmdline)
+            winpty.free(wcwd)
+            winpty.free(wenv)
+            winpty.free(temp)
+    def __dealloc__(self):
+        winpty.winpty_spawn_config_free(self._cfg)
 
 cdef class Pty:
     """class Pty to handle winpty object"""

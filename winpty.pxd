@@ -1,10 +1,15 @@
-from libc.stddef cimport wchar_t
-from libc.stdlib cimport malloc, free
+from libc.stddef cimport wchar_t, size_t
+from libc.stdlib cimport malloc, free, realloc
+from libc.string cimport memcpy
+
+cdef extern from 'string.h' nogil:
+    cdef size_t wcslen(const wchar_t*)
 
 cdef extern from 'windows.h' nogil:
     ctypedef wchar_t WCHAR
     ctypedef char CHAR
     ctypedef int BOOL
+    ctypedef WCHAR* LPWSTR
     ctypedef const WCHAR* LPCWSTR
     ctypedef CHAR* LPSTR
     ctypedef const CHAR* LPCSTR
@@ -16,7 +21,9 @@ cdef extern from 'windows.h' nogil:
     ctypedef PVOID HANDLE
     cdef int CP_UTF8
     cdef int WC_ERR_INVALID_CHARS
+    cdef int MB_ERR_INVALID_CHARS
     cdef int WideCharToMultiByte(UINT, DWORD, LPCWSTR, int, LPSTR, int, LPCSTR, LPBOOL)
+    cdef int MultiByteToWideChar(UINT, DWORD, LPCSTR, int, LPWSTR, int)
     cdef DWORD GetLastError()
     cdef DWORD GetProcessId(HANDLE)
 
@@ -55,4 +62,10 @@ cdef extern from 'winpty.h' nogil:
     cdef LPCWSTR winpty_conout_name(winpty_t* wp)
     cdef LPCWSTR winpty_conerr_name(winpty_t* wp)
     cdef BOOL winpty_set_size(winpty_t* wp, int cols, int rows, winpty_error_ptr_t* err)
+    cdef struct winpty_spawn_config_s:
+        pass
+    ctypedef winpty_spawn_config_s winpty_spawn_config_t
+    cdef winpty_spawn_config_t* winpty_spawn_config_new(UINT64 spawnFlags, LPCWSTR appname, LPCWSTR cmdline, LPCWSTR cwd, LPCWSTR env, winpty_error_ptr_t* err)
+    cdef void winpty_spawn_config_free(winpty_spawn_config_t* cfg);
+    cdef BOOL winpty_spawn(winpty_t* wp, const winpty_spawn_config_t* cfg, HANDLE* process_handle, HANDLE* thread_handle, DWORD* create_process_error, winpty_error_ptr_t* err)
     cdef void winpty_free(winpty_t* wp)
