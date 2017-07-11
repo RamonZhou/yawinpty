@@ -1,4 +1,4 @@
-from distutils.core import setup
+from setuptools import setup
 from distutils.extension import Extension
 from distutils.command.build_ext import build_ext
 from distutils.command.build_clib import build_clib
