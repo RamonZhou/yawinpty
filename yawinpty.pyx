@@ -329,7 +329,7 @@ class _SpawnFlag:
 cdef class SpawnConfig:
     """class SpawnConfig to handle spawn config object"""
     cdef winpty.winpty_spawn_config_t* _cfg
-    def __init__(self, appname = None, cmdline = None, cwd = None, env = None, *spawnFlags):
+    def __init__(self, *spawnFlags, appname = None, cmdline = None, cwd = None, env = None):
         """init SpawnConfig
         `spawnFlags` is a combine of `SpawnConfig.flag.*`
         `env` is like `{'VAR1': 'VAL1', 'VAR2': 'VAL2'}`
