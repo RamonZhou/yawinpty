@@ -173,6 +173,17 @@ class AgentCreationFailed(WinptyError):
     def __init__(self, err_msg):
         """init AgentCreationFailed with `err_msg`"""
         super().__init__(winpty.WINPTY_ERROR_AGENT_CREATION_FAILED, err_msg)
+class RespawnError(WinptyError):
+    """class RespawnError
+    raised if call `spawn` method on one `Pty` instance more than once"""
+    def __init__(self):
+        super().__init__(None, 'Cannot spawn on one `Pty` instance more than once')
+class SpecifiedSpawnCreateProcessFailed(SpawnCreateProcessFailed, OSError):
+    """class SpecifiedSpawnCreateProcessFailed for WINPTY_ERROR_SPAWN_CREATE_PROCESS_FAILED
+    with known OS error code from `GetLastError()`"""
+    def __init__(self, os_err_code, err_msg):
+        OSError.__init__(self, None, None, None, os_err_code)
+        super().__init__(err_msg)
 
 class _Flag:
     """class _Flag contains flags
@@ -350,6 +361,7 @@ cdef class SpawnConfig:
 cdef class Pty:
     """class Pty to handle winpty object"""
     cdef winpty.winpty_t* _pty
+    cdef winpty.BOOL _spawned
     def __init__(self, Config config = Config()):
         """start agent with `config`"""
         cdef winpty.winpty_error_ptr_t err
@@ -357,6 +369,7 @@ cdef class Pty:
             self._pty = winpty.winpty_open(config._cfg, &err)
         if err != NULL:
             WinptyError._raise_errobj(create_ErrorObject(err))
+        self._spawned = 0
     def __dealloc__(self):
         with nogil:
             winpty.winpty_free(self._pty)
@@ -379,3 +392,27 @@ cdef class Pty:
         if err != NULL:
             WinptyError._raise_errobj(create_ErrorObject(err))
         return rs != 0
+    def spawn(self, SpawnConfig spawn_config):
+        """spawn process
+        returns (process ID, thread ID) of spawned process
+
+        `spawn` can only be called once per Pty instance.  If it is called
+        before the output data pipe(s) is/are connected, then collected output is
+        buffered until the pipes are connected, rather than being discarded."""
+        if self._spawned != 0:
+            raise RespawnError
+        cdef winpty.HANDLE process, thread
+        cdef winpty.DWORD ec
+        cdef winpty.winpty_error_ptr_t err
+        cdef winpty.BOOL rv = winpty.winpty_spawn(self._pty, spawn_config._cfg, &process, &thread, &ec, &err)
+        if err != NULL:
+            errobj = create_ErrorObject(err)
+            err_type = WinptyError._from_errobj(errobj)
+            if err_type is SpawnCreateProcessFailed:
+                raise SpecifiedSpawnCreateProcessFailed(ec, errobj.get_msg())
+            else:
+                WinptyError._raise_errobj(errobj)
+        if rv == 0:
+            raise UnknownUnknownError('winpty_spawn returned false')
+        self._spawned = 1
+        return (winpty.GetProcessId(process), winpty.GetProcessId(thread))

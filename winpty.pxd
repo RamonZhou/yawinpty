@@ -66,6 +66,6 @@ cdef extern from 'winpty.h' nogil:
         pass
     ctypedef winpty_spawn_config_s winpty_spawn_config_t
     cdef winpty_spawn_config_t* winpty_spawn_config_new(UINT64 spawnFlags, LPCWSTR appname, LPCWSTR cmdline, LPCWSTR cwd, LPCWSTR env, winpty_error_ptr_t* err)
-    cdef void winpty_spawn_config_free(winpty_spawn_config_t* cfg);
+    cdef void winpty_spawn_config_free(winpty_spawn_config_t* cfg)
     cdef BOOL winpty_spawn(winpty_t* wp, const winpty_spawn_config_t* cfg, HANDLE* process_handle, HANDLE* thread_handle, DWORD* create_process_error, winpty_error_ptr_t* err)
     cdef void winpty_free(winpty_t* wp)
