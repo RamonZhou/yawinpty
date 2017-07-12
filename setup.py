@@ -59,10 +59,15 @@ class build_winpty_agent(build_clib):
                                           debug=self.debug,
                                           libraries=build_info.get('libraries'))
 
+def readme():
+    with open('README.rst', 'r') as f:
+        return f.read()
+
 setup(
     name = 'yawinpty',
     version = '0.4.3.dev1',
     description = 'yet another winpty binding for python',
+    long_description = readme(),
     author = 'TitanSnow',
     author_email = 'tttnns1024@gmail.com',
     url = 'https://github.com/PSoWin/yawinpty',
