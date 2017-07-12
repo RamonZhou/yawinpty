@@ -4,6 +4,7 @@ include setup.py
 include winpty.pxd
 include yawinpty.cpp
 include yawinpty.pyx
+include README.rst
 
 recursive-include winpty/src *.cc
 recursive-include winpty/src *.h
