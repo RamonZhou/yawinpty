@@ -9,6 +9,18 @@ yet another winpty binding for python
 .. image:: https://img.shields.io/github/license/PSoWin/yawinpty.svg
   :target: LICENSE
   :alt: LICENSE
+.. image:: https://img.shields.io/pypi/v/yawinpty.svg
+  :target: https://pypi.org/project/yawinpty
+  :alt: PyPI version
+.. image:: https://img.shields.io/pypi/status/yawinpty.svg
+  :target: https://pypi.org/project/yawinpty
+  :alt: Development status
+.. image:: https://img.shields.io/pypi/dm/yawinpty.svg
+  :target: https://pypi.org/project/yawinpty
+  :alt: Download per month
+.. image:: https://img.shields.io/pypi/wheel/yawinpty.svg
+  :target: https://pypi.org/project/yawinpty
+  :alt: wheel
 
 build & install
 ===============
