@@ -66,7 +66,14 @@ setup(
     author = 'TitanSnow',
     author_email = 'tttnns1024@gmail.com',
     url = 'https://github.com/PSoWin/yawinpty',
-    license='MIT',
+    license = 'MIT',
+    platforms = ['Windows'],
+    classifiers = [
+        'Development Status :: 2 - Pre-Alpha',
+        'Environment :: Win32 (MS Windows)',
+        'License :: OSI Approved :: MIT License',
+        'Operating System :: Microsoft :: Windows',
+        'Programming Language :: Cython'],
     cmdclass = {
         'build_ext': build_winpty,
         'build_clib': build_winpty_agent},
