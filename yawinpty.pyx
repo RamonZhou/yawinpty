@@ -440,6 +440,7 @@ cdef class Pty:
     """class Pty to handle winpty object"""
     cdef winpty.winpty_t* _pty
     cdef winpty.BOOL _spawned
+    cdef winpty.BOOL _closed
     def __init__(self, Config config = Config()):
         """start agent with `config`"""
         cdef winpty.winpty_error_ptr_t err
@@ -448,9 +449,9 @@ cdef class Pty:
         if err != NULL:
             WinptyError._raise_errobj(create_ErrorObject(err))
         self._spawned = 0
+        self._closed = 0
     def __dealloc__(self):
-        with nogil:
-            winpty.winpty_free(self._pty)
+        self.close()
     def conin_name(self):
         """get conin name"""
         return ws2str(winpty.winpty_conin_name(self._pty))
@@ -502,9 +503,17 @@ cdef class Pty:
     def wait_agent(self, timeout = INFINITE):
         """wait for agent process"""
         wait_process(self.agent_process(), timeout)
+    def close(self):
+        """close pty and kill subprocess"""
+        if self._closed == 0:
+            self._closed = 1
+            with nogil:
+                winpty.winpty_free(self._pty)
 
-cdef wait_process(winpty.HANDLE prs, timeout):
-    cdef winpty.DWORD rv = winpty.WaitForSingleObject(prs, timeout)
+cdef wait_process(winpty.HANDLE prs, winpty.DWORD timeout):
+    cdef winpty.DWORD rv
+    with nogil:
+        rv = winpty.WaitForSingleObject(prs, timeout)
     if rv == winpty.WAIT_FAILED:
         WinError._raise_lasterror()
     if rv == winpty.WAIT_TIMEOUT:
