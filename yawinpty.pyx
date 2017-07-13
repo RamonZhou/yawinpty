@@ -21,7 +21,7 @@ cdef ws2str(winpty.LPCWSTR wmsg):
     winpty.free(amsg)
     return msg.decode('utf8')
 
-cdef winpty.LPWSTR as2ws(const char* amsg):
+cdef winpty.LPWSTR as2ws(const char* amsg) except <winpty.LPWSTR>1:
     """convert char* to LPWSTR
     must free the result"""
     cdef winpty.LPWSTR  wmsg
@@ -46,7 +46,7 @@ cdef winpty.LPWSTR as2ws(const char* amsg):
     wmsg[sz] = 0
     return wmsg
 
-cdef winpty.LPWSTR str2ws(st):
+cdef winpty.LPWSTR str2ws(st) except <winpty.LPWSTR>1:
     if isinstance(st, str):
         st = st.encode('utf8')
     if isinstance(st, bytes):
