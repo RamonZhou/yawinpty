@@ -57,8 +57,8 @@ class YawinptyTest(unittest.TestCase):
         """test env passing"""
         env = {**environ}
         def randstr():
-            return ''.join([chr(randint(ord('A'), ord('Z'))) for i in range(randint(1, 1024))])
-        for i in range(1024):
+            return ''.join([chr(randint(ord('A'), ord('Z'))) for i in range(randint(1, 32))])
+        for i in range(128):
             key = randstr()
             if key not in env:
                 env[key] = randstr()
@@ -68,6 +68,19 @@ class YawinptyTest(unittest.TestCase):
             f.read()
         with open('env', 'rb') as f:
             self.assertEqual(pickle.load(f), env)
+    def test_wait_subprocess(self):
+        """test Pty.wait_subprocess"""
+        with Pty() as pty:
+            pty.spawn(SpawnConfig(cmdline = r'python tests\true.py'))
+            pty.wait_subprocess()
+        with Pty() as pty:
+            pty.spawn(SpawnConfig(cmdline = r'python tests\false.py'))
+            try:
+                pty.wait_subprocess()
+            except ExitNonZero as e:
+                self.assertEqual(e.exitcode, 1)
+            else:
+                self.assertTrue(False)
 
 if __name__ == '__main__':
     unittest.main()

@@ -518,6 +518,10 @@ cdef class Pty:
     def wait_subprocess(self, timeout = INFINITE):
         """wait for spawned process"""
         wait_process(self._process, timeout)
+    def __enter__(self):
+        return self
+    def __exit__(self, exception_type, exception_value, traceback):
+        self.close()
 
 cdef wait_process(winpty.HANDLE prs, winpty.DWORD timeout):
     cdef winpty.DWORD rv
