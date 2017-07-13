@@ -178,6 +178,29 @@ class RespawnError(WinptyError):
     raised if call `spawn` method on one `Pty` instance more than once"""
     def __init__(self):
         super().__init__(None, 'Cannot spawn on one `Pty` instance more than once')
+class WinError(OSError, UnknownUnknownError):
+    """windows error"""
+    def __init__(self, err_code):
+        """init WinError with `err_code` got from `GetLastError()`"""
+        cdef winpty.LPWSTR buf
+        cdef winpty.DWORD rv = winpty.FormatMessageW(winpty.FORMAT_MESSAGE_ALLOCATE_BUFFER | winpty.FORMAT_MESSAGE_FROM_SYSTEM | winpty.FORMAT_MESSAGE_IGNORE_INSERTS, NULL, err_code, 0, <winpty.LPWSTR>&buf, 0, NULL)
+        if rv == 0:
+            WinError._raise_lasterror()
+        msg = ws2str(buf)
+        if winpty.LocalFree(buf) != NULL:
+            WinError._raise_lasterror()
+        OSError.__init__(self, None, msg, None, err_code)
+        UnknownUnknownError.__init__(self, msg)
+    @classmethod
+    def _from_lasterror(cls):
+        """return WinError by last error of windows
+        for internal use"""
+        return cls(winpty.GetLastError())
+    @classmethod
+    def _raise_lasterror(cls):
+        """raise WinError by last error of windows
+        for internal use"""
+        raise cls._from_lasterror()
 class SpecifiedSpawnCreateProcessFailed(SpawnCreateProcessFailed, OSError):
     """class SpecifiedSpawnCreateProcessFailed for WINPTY_ERROR_SPAWN_CREATE_PROCESS_FAILED
     with known OS error code from `GetLastError()`"""

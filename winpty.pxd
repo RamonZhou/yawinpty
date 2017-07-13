@@ -19,6 +19,8 @@ cdef extern from 'windows.h' nogil:
     ctypedef unsigned long long UINT64
     ctypedef void* PVOID
     ctypedef PVOID HANDLE
+    ctypedef HANDLE HLOCAL
+    ctypedef const void* LPCVOID
     cdef int CP_UTF8
     cdef int WC_ERR_INVALID_CHARS
     cdef int MB_ERR_INVALID_CHARS
@@ -26,6 +28,11 @@ cdef extern from 'windows.h' nogil:
     cdef int MultiByteToWideChar(UINT, DWORD, LPCSTR, int, LPWSTR, int)
     cdef DWORD GetLastError()
     cdef DWORD GetProcessId(HANDLE)
+    cdef int FORMAT_MESSAGE_ALLOCATE_BUFFER
+    cdef int FORMAT_MESSAGE_FROM_SYSTEM
+    cdef int FORMAT_MESSAGE_IGNORE_INSERTS
+    cdef DWORD FormatMessageW(DWORD, LPCVOID, DWORD, DWORD, LPWSTR, DWORD, void*)
+    cdef HLOCAL LocalFree(HLOCAL)
 
 cdef extern from 'winpty.h' nogil:
     cdef int WINPTY_ERROR_SUCCESS
