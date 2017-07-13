@@ -207,6 +207,20 @@ class SpecifiedSpawnCreateProcessFailed(SpawnCreateProcessFailed, WinError):
     def __init__(self, os_err_code, err_msg):
         SpawnCreateProcessFailed.__init__(self, err_msg)
         WinError.__init__(self, os_err_code)
+class SubprocessError(WinptyError):
+    """class SubprocessError for error of subprocess"""
+    def __init__(self, process_id, err_msg):
+        WinptyError.__init__(self, None, err_msg)
+        self.process_id = process_id
+class TimeoutExpired(SubprocessError):
+    """class TimeoutExpired for time expired in waiting"""
+    def __init__(self, process_id):
+        SubprocessError.__init__(self, process_id, 'Timeout expired')
+class ExitNonZero(SubprocessError):
+    """class ExitNonZero for non-zero exitcode of subprocess"""
+    def __init__(self, process_id, exitcode):
+        SubprocessError.__init__(self, process_id, 'Exit with non-zero')
+        self.exitcode = exitcode
 
 class _Flag:
     """class _Flag contains flags
@@ -420,6 +434,8 @@ cdef class SpawnConfig:
         else:
             return object.__getattribute__(self, attr)
 
+INFINITE = <winpty.DWORD>winpty.INFINITE
+
 cdef class Pty:
     """class Pty to handle winpty object"""
     cdef winpty.winpty_t* _pty
@@ -444,9 +460,12 @@ cdef class Pty:
     def conerr_name(self):
         """get conerr name"""
         return ws2str(winpty.winpty_conerr_name(self._pty))
+    cdef winpty.HANDLE agent_process(self):
+        """get process handle of the agent"""
+        return winpty.winpty_agent_process(self._pty)
     def agent_process_id(self):
         """get process id of the agent"""
-        return winpty.GetProcessId(winpty.winpty_agent_process(self._pty))
+        return winpty.GetProcessId(self.agent_process())
     def set_size(self, cols, rows):
         """set the size of terminal"""
         cdef winpty.winpty_error_ptr_t err
@@ -480,3 +499,21 @@ cdef class Pty:
             raise UnknownUnknownError('winpty_spawn returned false')
         self._spawned = 1
         return (winpty.GetProcessId(process), winpty.GetProcessId(thread))
+    def wait_agent(self, timeout = INFINITE):
+        """wait for agent process"""
+        wait_process(self.agent_process(), timeout)
+
+cdef wait_process(winpty.HANDLE prs, timeout):
+    cdef winpty.DWORD rv = winpty.WaitForSingleObject(prs, timeout)
+    if rv == winpty.WAIT_FAILED:
+        WinError._raise_lasterror()
+    if rv == winpty.WAIT_TIMEOUT:
+        raise TimeoutExpired(winpty.GetProcessId(prs))
+    check_exitcode(prs)
+cdef check_exitcode(winpty.HANDLE prs):
+    cdef winpty.DWORD ec
+    cdef winpty.BOOL rv = winpty.GetExitCodeProcess(prs, &ec)
+    if rv == 0:
+        WinError._raise_lasterror()
+    if ec != 0:
+        raise ExitNonZero(winpty.GetProcessId(prs), ec)

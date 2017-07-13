@@ -21,6 +21,7 @@ cdef extern from 'windows.h' nogil:
     ctypedef PVOID HANDLE
     ctypedef HANDLE HLOCAL
     ctypedef const void* LPCVOID
+    ctypedef DWORD* LPDWORD
     cdef int CP_UTF8
     cdef int WC_ERR_INVALID_CHARS
     cdef int MB_ERR_INVALID_CHARS
@@ -33,6 +34,11 @@ cdef extern from 'windows.h' nogil:
     cdef int FORMAT_MESSAGE_IGNORE_INSERTS
     cdef DWORD FormatMessageW(DWORD, LPCVOID, DWORD, DWORD, LPWSTR, DWORD, void*)
     cdef HLOCAL LocalFree(HLOCAL)
+    cdef int INFINITE
+    cdef int WAIT_FAILED
+    cdef int WAIT_TIMEOUT
+    cdef DWORD WaitForSingleObject(HANDLE, DWORD)
+    cdef BOOL GetExitCodeProcess(HANDLE, LPDWORD)
 
 cdef extern from 'winpty.h' nogil:
     cdef int WINPTY_ERROR_SUCCESS
