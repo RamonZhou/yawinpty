@@ -441,6 +441,8 @@ cdef class Pty:
     cdef winpty.winpty_t* _pty
     cdef winpty.BOOL _spawned
     cdef winpty.BOOL _closed
+    cdef winpty.HANDLE _process
+    cdef winpty.HANDLE _thread
     def __init__(self, Config config = Config()):
         """start agent with `config`"""
         cdef winpty.winpty_error_ptr_t err
@@ -450,6 +452,8 @@ cdef class Pty:
             WinptyError._raise_errobj(create_ErrorObject(err))
         self._spawned = 0
         self._closed = 0
+        self._process = NULL
+        self._thread = NULL
     def __dealloc__(self):
         self.close()
     def conin_name(self):
@@ -499,6 +503,8 @@ cdef class Pty:
         if rv == 0:
             raise UnknownUnknownError('winpty_spawn returned false')
         self._spawned = 1
+        self._process = process
+        self._thread = thread
         return (winpty.GetProcessId(process), winpty.GetProcessId(thread))
     def wait_agent(self, timeout = INFINITE):
         """wait for agent process"""
@@ -509,6 +515,9 @@ cdef class Pty:
             self._closed = 1
             with nogil:
                 winpty.winpty_free(self._pty)
+    def wait_subprocess(self, timeout = INFINITE):
+        """wait for spawned process"""
+        wait_process(self._process, timeout)
 
 cdef wait_process(winpty.HANDLE prs, winpty.DWORD timeout):
     cdef winpty.DWORD rv
