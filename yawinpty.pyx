@@ -8,14 +8,14 @@ cdef ws2str(winpty.LPCWSTR wmsg):
         return ''
     cdef int sz = winpty.WideCharToMultiByte(winpty.CP_UTF8, winpty.WC_ERR_INVALID_CHARS, wmsg, -1, NULL, 0, NULL, NULL)
     if sz == 0:
-        raise OSError(None, None, None, winpty.GetLastError())
+        WinError._raise_lasterror()
     cdef char* amsg = <char*>winpty.malloc(sz + 1)
     if amsg == NULL:
         raise MemoryError('malloc failed')
     cdef int rc = winpty.WideCharToMultiByte(winpty.CP_UTF8, winpty.WC_ERR_INVALID_CHARS, wmsg, -1, amsg, sz, NULL, NULL)
     if rc == 0:
         winpty.free(amsg)
-        raise OSError(None, None, None, winpty.GetLastError())
+        WinError._raise_lasterror()
     amsg[sz] = <char>0
     msg = <bytes>amsg
     winpty.free(amsg)
@@ -35,14 +35,14 @@ cdef winpty.LPWSTR as2ws(const char* amsg):
         return wmsg
     cdef int sz = winpty.MultiByteToWideChar(winpty.CP_UTF8, winpty.MB_ERR_INVALID_CHARS, amsg, -1, NULL, 0)
     if sz == 0:
-        raise OSError(None, None, None, winpty.GetLastError())
+        WinError._raise_lasterror()
     wmsg = <winpty.LPWSTR>winpty.malloc(sizeof(winpty.WCHAR) * (sz + 1))
     if wmsg == NULL:
         raise MemoryError('malloc failed')
     cdef int rc = winpty.MultiByteToWideChar(winpty.CP_UTF8, winpty.MB_ERR_INVALID_CHARS, amsg, -1, wmsg, sz)
     if rc == 0:
         winpty.free(wmsg)
-        raise OSError(None, None, None, winpty.GetLastError())
+        WinError._raise_lasterror()
     wmsg[sz] = 0
     return wmsg
 
@@ -96,7 +96,7 @@ class WinptyError(RuntimeError):
 
     def __init__(self, code, err_msg):
         """init WinptyError with `code` and `err_msg`"""
-        super().__init__(err_msg)
+        RuntimeError.__init__(self, err_msg)
         self.code = code
     @staticmethod
     def _from_code(code):
@@ -127,58 +127,58 @@ class UnknownError(WinptyError):
     """class UnknownError for unknown error code"""
     def __init__(self, code, err_msg):
         """init UnknownError with `code` and `err_msg`"""
-        super().__init__(code, err_msg)
+        WinptyError.__init__(self, code, err_msg)
 class UnknownUnknownError(UnknownError):
     """class UnknownUnknownError for unspecified error code"""
     def __init__(self, err_msg):
         """init UnknownUnknownError with `err_msg`"""
-        super().__init__(None, err_msg)
+        UnknownError.__init__(self, None, err_msg)
 class OutOfMemory(WinptyError, MemoryError):
     """class OutOfMemory for WINPTY_ERROR_OUT_OF_MEMORY"""
     def __init__(self, err_msg):
         """init OutOfMemory with `err_msg`"""
-        super().__init__(winpty.WINPTY_ERROR_OUT_OF_MEMORY, err_msg)
+        WinptyError.__init__(self, winpty.WINPTY_ERROR_OUT_OF_MEMORY, err_msg)
 class SpawnCreateProcessFailed(WinptyError):
     """class SpawnCreateProcessFailed for WINPTY_ERROR_SPAWN_CREATE_PROCESS_FAILED"""
     def __init__(self, err_msg):
         """init SpawnCreateProcessFailed with `err_msg`"""
-        super().__init__(winpty.WINPTY_ERROR_SPAWN_CREATE_PROCESS_FAILED, err_msg)
+        WinptyError.__init__(self, winpty.WINPTY_ERROR_SPAWN_CREATE_PROCESS_FAILED, err_msg)
 class LoseConnection(WinptyError):
     """class LoseConnection for WINPTY_ERROR_LOST_CONNECTION"""
     def __init__(self, err_msg):
         """init LoseConnection with `err_msg`"""
-        super().__init__(winpty.WINPTY_ERROR_LOST_CONNECTION, err_msg)
+        WinptyError.__init__(self, winpty.WINPTY_ERROR_LOST_CONNECTION, err_msg)
 class AgentExeMissing(WinptyError):
     """class AgentExeMissing for WINPTY_ERROR_AGENT_EXE_MISSING"""
     def __init__(self, err_msg):
         """init AgentExeMissing with `err_msg`"""
-        super().__init__(winpty.WINPTY_ERROR_AGENT_EXE_MISSING, err_msg)
+        WinptyError.__init__(self, winpty.WINPTY_ERROR_AGENT_EXE_MISSING, err_msg)
 class Unspecified(WinptyError):
     """class Unspecified for WINPTY_ERROR_UNSPECIFIED"""
     def __init__(self, err_msg):
         """init Unspecified with `err_msg`"""
-        super().__init__(winpty.WINPTY_ERROR_UNSPECIFIED, err_msg)
+        WinptyError.__init__(self, winpty.WINPTY_ERROR_UNSPECIFIED, err_msg)
 class AgentDied(WinptyError):
     """class AgentDied for WINPTY_ERROR_AGENT_DIED"""
     def __init__(self, err_msg):
         """init AgentDied with `err_msg`"""
-        super().__init__(winpty.WINPTY_ERROR_AGENT_DIED, err_msg)
+        WinptyError.__init__(self, winpty.WINPTY_ERROR_AGENT_DIED, err_msg)
 class AgentTimeout(WinptyError):
     """class AgentTimeout for WINPTY_ERROR_AGENT_TIMEOUT"""
     def __init__(self, err_msg):
         """init AgentTimeout with `err_msg`"""
-        super().__init__(winpty.WINPTY_ERROR_AGENT_TIMEOUT, err_msg)
+        WinptyError.__init__(self, winpty.WINPTY_ERROR_AGENT_TIMEOUT, err_msg)
 class AgentCreationFailed(WinptyError):
     """class AgentCreationFailed for WINPTY_ERROR_AGENT_CREATION_FAILED"""
     def __init__(self, err_msg):
         """init AgentCreationFailed with `err_msg`"""
-        super().__init__(winpty.WINPTY_ERROR_AGENT_CREATION_FAILED, err_msg)
+        WinptyError.__init__(self, winpty.WINPTY_ERROR_AGENT_CREATION_FAILED, err_msg)
 class RespawnError(WinptyError):
     """class RespawnError
     raised if call `spawn` method on one `Pty` instance more than once"""
     def __init__(self):
-        super().__init__(None, 'Cannot spawn on one `Pty` instance more than once')
-class WinError(OSError, UnknownUnknownError):
+        WinptyError.__init__(self, None, 'Cannot spawn on one `Pty` instance more than once')
+class WinError(OSError, WinptyError):
     """windows error"""
     def __init__(self, err_code):
         """init WinError with `err_code` got from `GetLastError()`"""
@@ -190,7 +190,7 @@ class WinError(OSError, UnknownUnknownError):
         if winpty.LocalFree(buf) != NULL:
             WinError._raise_lasterror()
         OSError.__init__(self, None, msg, None, err_code)
-        UnknownUnknownError.__init__(self, msg)
+        WinptyError.__init__(self, None, msg)
     @classmethod
     def _from_lasterror(cls):
         """return WinError by last error of windows
@@ -201,12 +201,12 @@ class WinError(OSError, UnknownUnknownError):
         """raise WinError by last error of windows
         for internal use"""
         raise cls._from_lasterror()
-class SpecifiedSpawnCreateProcessFailed(SpawnCreateProcessFailed, OSError):
+class SpecifiedSpawnCreateProcessFailed(SpawnCreateProcessFailed, WinError):
     """class SpecifiedSpawnCreateProcessFailed for WINPTY_ERROR_SPAWN_CREATE_PROCESS_FAILED
     with known OS error code from `GetLastError()`"""
     def __init__(self, os_err_code, err_msg):
-        OSError.__init__(self, None, None, None, os_err_code)
-        super().__init__(err_msg)
+        SpawnCreateProcessFailed.__init__(self, err_msg)
+        WinError.__init__(self, os_err_code)
 
 class _Flag:
     """class _Flag contains flags
