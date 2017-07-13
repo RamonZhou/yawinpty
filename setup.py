@@ -2,7 +2,10 @@ from setuptools import setup
 from distutils.extension import Extension
 from distutils.command.build_ext import build_ext
 from distutils.command.build_clib import build_clib
-from Cython.Build import cythonize
+try:
+    from Cython.Build import cythonize
+except ImportError:
+    cythonize = None
 from subprocess import check_output
 from os import environ
 
@@ -63,6 +66,42 @@ def readme():
     with open('README.rst', 'r') as f:
         return f.read()
 
+ext_module = WinptyExtension('yawinpty',
+    define_macros = [
+        ('UNICODE', None),
+        ('_UNICODE', None),
+        ('NOMINMAX', None),
+        ('COMPILING_WINPTY_DLL', None)],
+    include_dirs = [
+        'winpty/src/include'],
+    libraries = [
+        'advapi32',
+        'user32'],
+    sources = [
+        'winpty/src/libwinpty/AgentLocation.cc',
+        'winpty/src/libwinpty/winpty.cc',
+        'winpty/src/shared/BackgroundDesktop.cc',
+        'winpty/src/shared/Buffer.cc',
+        'winpty/src/shared/DebugClient.cc',
+        'winpty/src/shared/GenRandom.cc',
+        'winpty/src/shared/OwnedHandle.cc',
+        'winpty/src/shared/StringUtil.cc',
+        'winpty/src/shared/WindowsSecurity.cc',
+        'winpty/src/shared/WindowsVersion.cc',
+        'winpty/src/shared/WinptyAssert.cc',
+        'winpty/src/shared/WinptyException.cc',
+        'winpty/src/shared/WinptyVersion.cc',
+        'yawinpty.pyx' if cythonize is not None else 'yawinpty.cpp'],
+    language='c++')
+if cythonize is not None:
+    ext_module = cythonize(
+        ext_module,
+        compiler_directives = {
+            'embedsignature': True,
+            'language_level': 3})
+else:
+    ext_module = [ext_module]
+
 setup(
     name = 'yawinpty',
     version = '0.4.3.dev1',
@@ -82,37 +121,7 @@ setup(
     cmdclass = {
         'build_ext': build_winpty,
         'build_clib': build_winpty_agent},
-    ext_modules = cythonize(
-        WinptyExtension('yawinpty',
-            define_macros = [
-                ('UNICODE', None),
-                ('_UNICODE', None),
-                ('NOMINMAX', None),
-                ('COMPILING_WINPTY_DLL', None)],
-            include_dirs = [
-                'winpty/src/include'],
-            libraries = [
-                'advapi32',
-                'user32'],
-            sources = [
-                'winpty/src/libwinpty/AgentLocation.cc',
-                'winpty/src/libwinpty/winpty.cc',
-                'winpty/src/shared/BackgroundDesktop.cc',
-                'winpty/src/shared/Buffer.cc',
-                'winpty/src/shared/DebugClient.cc',
-                'winpty/src/shared/GenRandom.cc',
-                'winpty/src/shared/OwnedHandle.cc',
-                'winpty/src/shared/StringUtil.cc',
-                'winpty/src/shared/WindowsSecurity.cc',
-                'winpty/src/shared/WindowsVersion.cc',
-                'winpty/src/shared/WinptyAssert.cc',
-                'winpty/src/shared/WinptyException.cc',
-                'winpty/src/shared/WinptyVersion.cc',
-                'yawinpty.pyx'],
-            language='c++'),
-        compiler_directives = {
-            'embedsignature': True,
-            'language_level': 3}),
+    ext_modules = ext_module,
     libraries = [['winpty-agent', {
         'include_dirs': [
             'winpty/src/include'],
