@@ -6,7 +6,7 @@ try:
     from Cython.Build import cythonize
 except ImportError:
     cythonize = None
-from subprocess import check_output
+from subprocess import check_output, check_call
 from os import environ
 
 cmd = environ.get('comspec', 'cmd')
@@ -22,6 +22,8 @@ class build_winpty(build_ext):
             winpty_gen_include = check_output([cmd, '/c', r'cd winpty\src\shared && UpdateGenVersion.bat {}'.format(winpty_commit_hash)]).decode()
             if winpty_gen_include[-2:] == '\r\n':
                 winpty_gen_include = winpty_gen_include[:-2]
+
+            check_call(['lib', '/nologo', '/def:winpty.def', '/out:winpty.lib'])
         for ext in winpty_exts:
             ext.include_dirs += ['winpty/src/{}'.format(winpty_gen_include)]
 
@@ -67,6 +69,13 @@ class build_winpty_agent(build_clib):
                                             output_dir=self.build_clib,
                                             debug=self.debug,
                                             libraries=build_info.get('libraries'))
+    def run(self):
+        environ["DISTUTILS_USE_SDK"] = ""
+        environ["MSSdk"] = ""
+        assert("DISTUTILS_USE_SDK" in environ and "MSSdk" in environ)
+        build_clib.run(self)
+        del environ["DISTUTILS_USE_SDK"]
+        del environ["MSSdk"]
 
 
 def readme():
@@ -78,6 +87,7 @@ ext_module = WinptyExtension('yawinpty',
         'winpty/src/include'],
     sources = [
         'yawinpty.pyx' if cythonize is not None else 'yawinpty.cpp'],
+    libraries = ['winpty'],
     language='c++')
 if cythonize is not None:
     ext_module = cythonize(
@@ -90,7 +100,7 @@ else:
 
 setup(
     name = 'yawinpty',
-    version = '0.4.3.dev1',
+    version = '0.4.3.dev2',
     description = 'yet another winpty binding for python',
     long_description = readme(),
     author = 'TitanSnow',

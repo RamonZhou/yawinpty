@@ -104,7 +104,7 @@ else:
 
 setup(
     name = 'yawinpty',
-    version = '0.4.3.dev1',
+    version = '0.4.3.dev2',
     description = 'yet another winpty binding for python',
     long_description = readme(),
     author = 'TitanSnow',
