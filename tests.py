@@ -55,7 +55,7 @@ class YawinptyTest(unittest.TestCase):
             self.assertTrue(False)
     def test_env(self):
         """test env passing"""
-        env = {**environ}
+        env = environ.copy()
         def randstr():
             return ''.join([chr(randint(ord('A'), ord('Z'))) for i in range(randint(1, 32))])
         for i in range(128):
