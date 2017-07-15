@@ -21,22 +21,38 @@ yet another winpty binding for python
 .. image:: https://img.shields.io/pypi/wheel/yawinpty.svg
   :target: https://pypi.org/project/yawinpty
   :alt: wheel
+.. image:: https://img.shields.io/pypi/pyversions/yawinpty.svg
+  :target: https://pypi.org/project/yawinpty
+  :alt: Support python versions
+.. image:: https://img.shields.io/pypi/implementation/yawinpty.svg
+  :target: https://pypi.org/project/yawinpty
+  :alt: Implementation
 
-build & install
+install
+=======
+
+.. code-block:: bash
+
+  pip install yawinpty
+
+build from source
 ===============
 
-There are two ways to build & install yawinpty
+python 3.5+
+  install `Visual C++ 2015 Build Tools`_, then use ``python setup.py build`` to build
 
-install from an egg/wheel
-  it's easiest way. just use ``pip`` is ok. you can use ``pip install`` to install from PyPI as well
-build from source
-  if none of pre-built eggs is suitable of your python, then you need to build from source
-  
-  make sure you have installed Visual Studio and also make sure the version of it is new enough otherwise building winpty might fail
-  
-  *important:* python 3.4 and versions below always try to use MSVC9.0. it might be a issue of ``distutils`` so some hack work is needed to do on ``distutils``. python 3.5+ have no problem
-  
-  open "Native Tools Command Prompt for VS" then use ``python setup.py build`` to build and ``python setup.py install`` to install. also you could install from a source tarball
+older python
+  +----------+-----------------------+
+  |Visual C++|CPython version        |
+  +==========+=======================+
+  |10.0      |3.3, 3.4               |
+  +----------+-----------------------+
+  |9.0       |2.6, 2.7, 3.0, 3.1, 3.2|
+  +----------+-----------------------+
+
+  install *both* `Visual C++ 2015 Build Tools`_ and the matching version of Visual C++ Build Tools. open "Visual C++ *2015* Build Tools Command Prompt" with the same arch as python, then use ``python setup.py build`` to build
+
+.. _`Visual C++ 2015 Build Tools`: http://landinghub.visualstudio.com/visual-cpp-build-tools
 
 basic example
 =============
@@ -44,12 +60,11 @@ basic example
 .. code-block:: python
 
   from yawinpty import *
-  
-  pty = Pty(Config(Config.flag.plain_output))
-  cfg = SpawnConfig(SpawnConfig.flag.auto_shutdown, cmdline='python -c "print(\'helloworld\')"')
-  with open(pty.conout_name(), 'r') as fout:
-      pty.spawn(cfg)
-      out = fout.read()
+
+  with Pty() as pty:
+      pty.spawn(SpawnConfig(SpawnConfig.flag.auto_shutdown, cmdline='python -c "print(\'HelloWorld!\')"'))
+      with open(pty.conout_name(), 'r') as f:
+          print(f.read())
 
 
 using ``yawinpty``
@@ -122,6 +137,19 @@ returns a tuple of *process id, thread id* of spawned process
   the environ for the spawned process, a dict like ``{'VAR1': 'VAL1', 'VAR2': 'VAL2'}``
 
 note that init a ``SpawnConfig`` *does not* spawn a process. a process is spawned only when calling ``Pty.spawn()``. one SpawnConfig instance could be used multitimes
+
+Pty.\ *wait_agent*\ (\ *timeout = yawinpty.INFINITE*\ )
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+Pty.\ *wait_subprocess*\ (\ *timeout = yawinpty.INFINITE*\ )
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+wait for agent/spawned process to exit. raise yawinpty.TimeoutExpired if out of timeout
+
+Pty.\ *close*\ ()
+>>>>>>>>>>>>>>>>>
+
+kill processes not exited, close pty and release Windows resource
 
 exceptions
 >>>>>>>>>>
