@@ -4,6 +4,9 @@ before_build:
 build_script:
   - C:\python36\Scripts\pip install -r requirements.txt
   - C:\python36\python setup.py sdist
+  - ps: C:\python36\Scripts\pip install ('dist\' + @(Get-ChildItem dist\*)[0].Name)
+  - C:\python36\python tests.py
+  - ps: Move-Item dist\* finaldist
   - ps: .\.appveyor.ps1
 artifacts:
   - path: 'finaldist\*'

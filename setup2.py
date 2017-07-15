@@ -10,6 +10,7 @@ except ImportError:
     cythonize = None
 from subprocess import check_output, check_call
 from os import environ
+from setupcommon import *
 
 cmd = environ.get('comspec', 'cmd')
 
@@ -109,13 +110,6 @@ class CustomMSVCCompiler(MSVCCompiler):
         self.compile_options_debug += ['/EHsc']
 
 
-def readme():
-    with open('README.rst', 'r') as f:
-        return f.read()
-def classifiers():
-    with open('classifiers', 'r') as f:
-        return [ln[:-1] for ln in f]
-
 ext_module = WinptyExtension('yawinpty',
     include_dirs = [
         'winpty/src/include'],
@@ -134,7 +128,7 @@ else:
 
 setup(
     name = 'yawinpty',
-    version = '0.4.3.dev2',
+    version = version(),
     description = 'yet another winpty binding for python',
     long_description = readme(),
     author = 'TitanSnow',

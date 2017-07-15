@@ -8,6 +8,7 @@ except ImportError:
     cythonize = None
 from subprocess import check_output
 from os import environ
+from setupcommon import *
 
 cmd = environ.get('comspec', 'cmd')
 
@@ -62,12 +63,6 @@ class build_winpty_agent(build_clib):
                                           debug=self.debug,
                                           libraries=build_info.get('libraries'))
 
-def readme():
-    with open('README.rst', 'r') as f:
-        return f.read()
-def classifiers():
-    with open('classifiers', 'r') as f:
-        return [ln[:-1] for ln in f]
 
 ext_module = WinptyExtension('yawinpty',
     define_macros = [
@@ -107,7 +102,7 @@ else:
 
 setup(
     name = 'yawinpty',
-    version = '0.4.3.dev2',
+    version = version(),
     description = 'yet another winpty binding for python',
     long_description = readme(),
     author = 'TitanSnow',
