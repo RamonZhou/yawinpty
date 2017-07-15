@@ -140,3 +140,6 @@ $RECYCLE.BIN/
 
 # Cython generator code
 yawinpty.cpp
+
+# finaldist
+finaldist

@@ -6,6 +6,9 @@ Get-ChildItem C:\Python* | ForEach-Object{
     $env:Path = 'C:\' + $python + '\Scripts;' + 'C:\' + $python + ';' + $env:Path
     Write-Host (python -c "print(__import__('sys').version)") -ForegroundColor Yellow
 
+    if(Test-Path build){ Remove-Item -Recurse build }
+    if(Test-Path dist){ Remove-Item -Recurse dist }
+
     if($python.StartsWith('Python35') -or $python.StartsWith('Python36')){
         python .appveyor.py
         if(-not $?){ throw }

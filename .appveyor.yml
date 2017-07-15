@@ -1,9 +1,10 @@
 before_build:
   - git submodule update --init
+  - ps: New-Item finaldist -Type Directory
 build_script:
   - C:\python36\Scripts\pip install -r requirements.txt
   - C:\python36\python setup.py sdist
   - ps: .\.appveyor.ps1
 artifacts:
-  - path: 'dist\*'
+  - path: 'finaldist\*'
     name: dists

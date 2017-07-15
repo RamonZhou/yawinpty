@@ -1,7 +1,13 @@
 from subprocess import check_call, STDOUT
+from glob import glob
+from shutil import move
 
 check_call('pip install -r requirements.txt', stderr = STDOUT)
 check_call('pip install wheel', stderr = STDOUT)
 check_call('python setup.py bdist_wheel', stderr = STDOUT)
-check_call('python setup.py install', stderr = STDOUT)
+whl = glob('dist/*.whl')
+assert(len(whl) == 1)
+whl = whl[0]
+check_call(['pip', 'install', whl], stderr = STDOUT)
+move(whl, 'finaldist')
 check_call('python tests.py', stderr = STDOUT)
