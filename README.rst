@@ -33,7 +33,7 @@ install
   pip install yawinpty
 
 build from source
-===============
+=================
 
 python 3.5+
   install `Visual C++ 2015 Build Tools`_, then use ``python setup.py build`` to build
