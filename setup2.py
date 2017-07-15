@@ -2,6 +2,8 @@ from setuptools import setup
 from distutils.extension import Extension
 from distutils.command.build_ext import build_ext
 from distutils.command.build_clib import build_clib
+from distutils.msvc9compiler import MSVCCompiler
+from distutils.sysconfig import customize_compiler
 try:
     from Cython.Build import cythonize
 except ImportError:
@@ -73,9 +75,34 @@ class build_winpty_agent(build_clib):
         environ["DISTUTILS_USE_SDK"] = ""
         environ["MSSdk"] = ""
         assert("DISTUTILS_USE_SDK" in environ and "MSSdk" in environ)
-        build_clib.run(self)
+
+        if not self.libraries:
+            return
+
+        self.compiler = CustomMSVCCompiler(dry_run=self.dry_run,
+                                     force=self.force)
+        customize_compiler(self.compiler)
+
+        if self.include_dirs is not None:
+            self.compiler.set_include_dirs(self.include_dirs)
+        if self.define is not None:
+            # 'define' option is a list of (name,value) tuples
+            for (name,value) in self.define:
+                self.compiler.define_macro(name, value)
+        if self.undef is not None:
+            for macro in self.undef:
+                self.compiler.undefine_macro(macro)
+
+        self.build_libraries(self.libraries)
+
         del environ["DISTUTILS_USE_SDK"]
         del environ["MSSdk"]
+
+class CustomMSVCCompiler(MSVCCompiler):
+    def manifest_setup_ldargs(self, output_filename, build_temp, ld_args):
+        pass
+    def manifest_get_embed_info(self, target_desc, ld_args):
+        return None
 
 
 def readme():
