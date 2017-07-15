@@ -103,6 +103,10 @@ class CustomMSVCCompiler(MSVCCompiler):
         pass
     def manifest_get_embed_info(self, target_desc, ld_args):
         return None
+    def initialize(self, plat_name=None):
+        MSVCCompiler.initialize(self, plat_name)
+        self.compile_options += ['/EHsc']
+        self.compile_options_debug += ['/EHsc']
 
 
 def readme():
