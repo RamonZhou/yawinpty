@@ -65,6 +65,9 @@ class build_winpty_agent(build_clib):
 def readme():
     with open('README.rst', 'r') as f:
         return f.read()
+def classifiers():
+    with open('classifiers', 'r') as f:
+        return [ln[:-1] for ln in f]
 
 ext_module = WinptyExtension('yawinpty',
     define_macros = [
@@ -112,12 +115,7 @@ setup(
     url = 'https://github.com/PSoWin/yawinpty',
     license = 'MIT',
     platforms = ['Windows'],
-    classifiers = [
-        'Development Status :: 2 - Pre-Alpha',
-        'Environment :: Win32 (MS Windows)',
-        'License :: OSI Approved :: MIT License',
-        'Operating System :: Microsoft :: Windows',
-        'Programming Language :: Cython'],
+    classifiers = classifiers(),
     cmdclass = {
         'build_ext': build_winpty,
         'build_clib': build_winpty_agent},
