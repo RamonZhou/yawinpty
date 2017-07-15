@@ -1,4 +1,4 @@
 import pickle
 from os import environ
 
-pickle.dump({**environ}, open('env', 'wb'))
+pickle.dump(dict(**environ), open('env', 'wb'))

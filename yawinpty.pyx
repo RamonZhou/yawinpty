@@ -1,4 +1,5 @@
 cimport winpty
+from sys import version_info
 
 cdef ws2str(winpty.LPCWSTR wmsg):
     """convert LPCWSTR to str"""
@@ -178,7 +179,19 @@ class RespawnError(WinptyError):
     raised if call `spawn` method on one `Pty` instance more than once"""
     def __init__(self):
         WinptyError.__init__(self, None, 'Cannot spawn on one `Pty` instance more than once')
-class WinError(OSError, WinptyError):
+if version_info >= (3, 4):
+    class WError(OSError):
+        pass
+else:
+    class WError(Exception):
+        def __init__(self, errno, strerror, filename = None, winerror = None, filename2 = None):
+            Exception.__init__(self)
+            self.errno = errno
+            self.strerror = strerror
+            self.filename = filename
+            self.winerror = winerror
+            self.filename2 = filename2
+class WinError(WError, WinptyError):
     """windows error"""
     def __init__(self, err_code):
         """init WinError with `err_code` got from `GetLastError()`"""
@@ -189,7 +202,7 @@ class WinError(OSError, WinptyError):
         msg = ws2str(buf)
         if winpty.LocalFree(buf) != NULL:
             WinError._raise_lasterror()
-        OSError.__init__(self, None, msg, None, err_code)
+        WError.__init__(self, None, msg, None, err_code)
         WinptyError.__init__(self, None, msg)
     @classmethod
     def _from_lasterror(cls):
