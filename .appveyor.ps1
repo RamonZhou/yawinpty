@@ -9,7 +9,8 @@ Get-ChildItem C:\Python* | ForEach-Object{
     if($python.StartsWith('Python35') -or $python.StartsWith('Python36')){
         python .appveyor.py
         if(-not $?){ throw }
-    }else{
+        Write-Host ('Success ' + $python) -ForegroundColor Green
+    }elseif($python.StartsWith('Python34') -or $python.StartsWith('Python27')){
         $cmd = 'call "%VS140COMNTOOLS%\..\..\VC\vcvarsall.bat" '
         if($python.EndsWith('x64')){
             $cmd += 'x64'
@@ -19,8 +20,10 @@ Get-ChildItem C:\Python* | ForEach-Object{
         $cmd += ' && python .appveyor.py'
         cmd /c $cmd
         if(-not $?){ throw }
+        Write-Host ('Success ' + $python) -ForegroundColor Green
+    }else{
+        Write-Host ('Skip ' + $python) -ForegroundColor Gray
     }
 
-    Write-Host ('Success ' + $python) -ForegroundColor Green
     $env:Path = $originPath
 }
