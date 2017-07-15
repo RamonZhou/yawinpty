@@ -1,4 +1,19 @@
 $ErrorActionPreference = "Stop"
+$newPath = @()
+$env:Path.split(';') | ForEach-Object {
+    if(-not (Test-Path (Join-Path $_ 'winpty-agent.exe'))){
+        $newPath += $_
+    }
+}
+$backupPath = $env:Path
+$env:Path = ($newPath -join ';')
+try{
+    Get-Command 'winpty-agent'
+    $stillExists = $True
+}catch{
+    $stillExists = $False
+}
+if($stillExists){ throw }
 Get-ChildItem C:\Python* | ForEach-Object{
     $python = $_.Name
     Write-Host ('Testing ' + $python) -ForegroundColor Magenta
@@ -30,3 +45,4 @@ Get-ChildItem C:\Python* | ForEach-Object{
 
     $env:Path = $originPath
 }
+$env:Path = $backupPath
