@@ -1,9 +1,12 @@
 include LICENSE
 include setup.py
+include setup2.py
+include setup3.py
 include winpty.pxd
 include yawinpty.cpp
 include yawinpty.pyx
 include README.rst
+include winpty/LICENSE
 
 recursive-include winpty/src *.cc
 recursive-include winpty/src *.h
