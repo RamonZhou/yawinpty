@@ -39,6 +39,7 @@ cdef extern from 'windows.h' nogil:
     cdef int WAIT_TIMEOUT
     cdef DWORD WaitForSingleObject(HANDLE, DWORD)
     cdef BOOL GetExitCodeProcess(HANDLE, LPDWORD)
+    cdef BOOL CloseHandle(HANDLE)
 
 cdef extern from 'winpty.h' nogil:
     cdef int WINPTY_ERROR_SUCCESS

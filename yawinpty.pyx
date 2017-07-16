@@ -535,6 +535,8 @@ cdef class Pty:
         if self._closed == 0:
             self._closed = 1
             with nogil:
+                winpty.CloseHandle(self._process)
+                winpty.CloseHandle(self._thread)
                 winpty.winpty_free(self._pty)
     def wait_subprocess(self, timeout = INFINITE):
         """wait for spawned process"""
