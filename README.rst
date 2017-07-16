@@ -32,6 +32,18 @@ install
 
   pip install yawinpty
 
+runtime library dependency of pre-built wheels
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+python 3.5+
+  depends on `Visual C++ Redistributable for Visual Studio 2015`_
+
+older python
+  depends on *both* `Visual C++ Redistributable for Visual Studio 2015`_ and `Microsoft Visual C++ 2008 Redistributable Package`_
+
+.. _`Visual C++ Redistributable for Visual Studio 2015`: https://www.microsoft.com/en-us/download/details.aspx?id=48145
+.. _`Microsoft Visual C++ 2008 Redistributable Package`: https://www.microsoft.com/en-us/download/details.aspx?id=5582
+
 build from source
 =================
 
