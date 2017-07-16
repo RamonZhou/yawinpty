@@ -545,6 +545,11 @@ cdef class Pty:
         return self
     def __exit__(self, exception_type, exception_value, traceback):
         self.close()
+    def _get_handles(self):
+        """get handles by int"""
+        return (<winpty.uintptr_t>self.agent_process(),
+                <winpty.uintptr_t>self._process,
+                <winpty.uintptr_t>self._thread)
 
 cdef wait_process(winpty.HANDLE prs, winpty.DWORD timeout):
     cdef winpty.DWORD rv
