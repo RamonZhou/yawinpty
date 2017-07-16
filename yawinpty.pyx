@@ -62,7 +62,7 @@ cdef winpty.LPWSTR str2ws(st) except <winpty.LPWSTR>1:
 cdef class _ErrorObject:
     """errobj handle class for internal use"""
     cdef winpty.winpty_error_ptr_t _errobj
-    def __init__(self):
+    def __cinit__(self):
         """should not use this
         use `create_ErrorObject` instead"""
         self._errobj = NULL
@@ -315,6 +315,8 @@ class _MouseMode:
 cdef class Config:
     """class Config to handle a winpty config object"""
     cdef winpty.winpty_config_t* _cfg
+    def __cinit__(self):
+        self._cfg = NULL
     def __init__(self, *flags):
         """init Config with `flags`
         `flags` is combine of `Config.flag.*`"""
@@ -381,6 +383,8 @@ class _SpawnFlag:
 cdef class SpawnConfig:
     """class SpawnConfig to handle spawn config object"""
     cdef winpty.winpty_spawn_config_t* _cfg
+    def __cinit__(self):
+        self._cfg = NULL
     def __init__(self, *spawnFlags, appname = None, cmdline = None, cwd = None, env = None):
         """init SpawnConfig
         `spawnFlags` is a combine of `SpawnConfig.flag.*`
@@ -458,6 +462,12 @@ cdef class Pty:
     cdef winpty.BOOL _closed
     cdef winpty.HANDLE _process
     cdef winpty.HANDLE _thread
+    def __cinit__(self):
+        self._spawned = 0
+        self._closed = 0
+        self._process = NULL
+        self._thread = NULL
+        self._pty = NULL
     def __init__(self, Config config = Config()):
         """start agent with `config`"""
         cdef winpty.winpty_error_ptr_t err
@@ -465,10 +475,6 @@ cdef class Pty:
             self._pty = winpty.winpty_open(config._cfg, &err)
         if err != NULL:
             WinptyError._raise_errobj(create_ErrorObject(err))
-        self._spawned = 0
-        self._closed = 0
-        self._process = NULL
-        self._thread = NULL
     def __dealloc__(self):
         self.close()
     def conin_name(self):
