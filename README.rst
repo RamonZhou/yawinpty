@@ -63,18 +63,73 @@ older python
 
 .. _`Visual C++ 2015 Build Tools`: http://landinghub.visualstudio.com/visual-cpp-build-tools
 
-basic example
-=============
+basic examples
+==============
+
+get output from process
+>>>>>>>>>>>>>>>>>>>>>>>
+
+.. code-block:: python
+
+  from yawinpty import *
+
+  # open a pty
+  with Pty() as pty:
+      # spawn a process ``python -c "print('HelloWorld!')"``
+      pty.spawn(SpawnConfig(SpawnConfig.flag.auto_shutdown, cmdline='python -c "print(\'HelloWorld!\')"'))
+      # open the out pipe of console to read
+      with open(pty.conout_name(), 'r') as f:
+          # HelloWorld!
+          print(f.read())
+
+communicate with process
+>>>>>>>>>>>>>>>>>>>>>>>>
 
 .. code-block:: python
 
   from yawinpty import *
 
   with Pty() as pty:
-      pty.spawn(SpawnConfig(SpawnConfig.flag.auto_shutdown, cmdline='python -c "print(\'HelloWorld!\')"'))
+      # spawn python repl
+      pty.spawn(SpawnConfig(SpawnConfig.flag.auto_shutdown, cmdline='python'))
+      # open the in pipe of console to write
+      with open(pty.conin_name(), 'w') as f:
+          f.write('1 + 2\n')
+          # write EOF to exit python
+          f.write('\x1a\n')
       with open(pty.conout_name(), 'r') as f:
           print(f.read())
 
+gui log of console program (navie)
+>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>
+
+.. code-block:: python
+
+  from sys import argv
+  from threading import Thread
+  from subprocess import list2cmdline
+  from tkinter import *
+  from yawinpty import *
+
+  root = Tk()
+  con = Text(root)
+  con.pack()
+
+  def poll():
+      # strip escape seq
+      with Pty(Config(Config.flag.plain_output)) as pty:
+          # run the cmdline passed in by ``sys.argv``
+          pty.spawn(SpawnConfig(SpawnConfig.flag.auto_shutdown, cmdline=list2cmdline(argv[1:])))
+          with open(pty.conout_name(), 'r') as f:
+              while True:
+                  ln = f.readline()
+                  if not ln:
+                      break
+                  # log to gui
+                  con.insert(END, ln)
+  Thread(target=poll).start()
+
+  root.mainloop()
 
 using ``yawinpty``
 ==================
