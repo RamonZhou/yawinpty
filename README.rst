@@ -218,4 +218,4 @@ kill processes not exited, close pty and release Windows resource
 exceptions
 >>>>>>>>>>
 
-all winpty related exceptions are subclasses of ``yawinpty.WinptyError``. ``help(yawinpty)`` for more information
+all winpty related exceptions are subclasses of ``yawinpty.YawinptyError``. ``help(yawinpty)`` for more information

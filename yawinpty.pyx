@@ -85,10 +85,12 @@ cdef create_ErrorObject(winpty.winpty_error_ptr_t errobj):
     self._errobj = errobj
     return self
 
-class WinptyError(RuntimeError):
-    """base error class for winpty
+class YawinptyError(RuntimeError):
+    """base error class for yawinpty"""
+    pass
 
-    there are 'error codes' for winpty to specify errors
+class WinptyError(YawinptyError):
+    """there are 'error codes' for winpty to specify errors
 
     each error class maps a error code
 
@@ -99,7 +101,7 @@ class WinptyError(RuntimeError):
 
     def __init__(self, code, err_msg):
         """init WinptyError with ``code`` and ``err_msg``"""
-        RuntimeError.__init__(self, err_msg)
+        super().__init__(err_msg)
         self.code = code
     @staticmethod
     def _from_code(code):
@@ -130,70 +132,70 @@ class UnknownError(WinptyError):
     """class UnknownError for unknown error code"""
     def __init__(self, code, err_msg):
         """init UnknownError with ``code`` and ``err_msg``"""
-        WinptyError.__init__(self, code, err_msg)
+        super().__init__(code, err_msg)
 class UnknownUnknownError(UnknownError):
     """class UnknownUnknownError for unspecified error code"""
     def __init__(self, err_msg):
         """init UnknownUnknownError with ``err_msg``"""
-        UnknownError.__init__(self, None, err_msg)
+        super().__init__(None, err_msg)
 class OutOfMemory(WinptyError, MemoryError):
     """class OutOfMemory for WINPTY_ERROR_OUT_OF_MEMORY"""
     def __init__(self, err_msg):
         """init OutOfMemory with ``err_msg``"""
-        WinptyError.__init__(self, winpty.WINPTY_ERROR_OUT_OF_MEMORY, err_msg)
+        super().__init__(winpty.WINPTY_ERROR_OUT_OF_MEMORY, err_msg)
 class SpawnCreateProcessFailed(WinptyError):
     """class SpawnCreateProcessFailed for WINPTY_ERROR_SPAWN_CREATE_PROCESS_FAILED"""
     def __init__(self, err_msg):
         """init SpawnCreateProcessFailed with ``err_msg``"""
-        WinptyError.__init__(self, winpty.WINPTY_ERROR_SPAWN_CREATE_PROCESS_FAILED, err_msg)
+        super().__init__(winpty.WINPTY_ERROR_SPAWN_CREATE_PROCESS_FAILED, err_msg)
 class LoseConnection(WinptyError):
     """class LoseConnection for WINPTY_ERROR_LOST_CONNECTION"""
     def __init__(self, err_msg):
         """init LoseConnection with ``err_msg``"""
-        WinptyError.__init__(self, winpty.WINPTY_ERROR_LOST_CONNECTION, err_msg)
+        super().__init__(winpty.WINPTY_ERROR_LOST_CONNECTION, err_msg)
 class AgentExeMissing(WinptyError):
     """class AgentExeMissing for WINPTY_ERROR_AGENT_EXE_MISSING"""
     def __init__(self, err_msg):
         """init AgentExeMissing with ``err_msg``"""
-        WinptyError.__init__(self, winpty.WINPTY_ERROR_AGENT_EXE_MISSING, err_msg)
+        super().__init__(winpty.WINPTY_ERROR_AGENT_EXE_MISSING, err_msg)
 class Unspecified(WinptyError):
     """class Unspecified for WINPTY_ERROR_UNSPECIFIED"""
     def __init__(self, err_msg):
         """init Unspecified with ``err_msg``"""
-        WinptyError.__init__(self, winpty.WINPTY_ERROR_UNSPECIFIED, err_msg)
+        super().__init__(winpty.WINPTY_ERROR_UNSPECIFIED, err_msg)
 class AgentDied(WinptyError):
     """class AgentDied for WINPTY_ERROR_AGENT_DIED"""
     def __init__(self, err_msg):
         """init AgentDied with ``err_msg``"""
-        WinptyError.__init__(self, winpty.WINPTY_ERROR_AGENT_DIED, err_msg)
+        super().__init__(winpty.WINPTY_ERROR_AGENT_DIED, err_msg)
 class AgentTimeout(WinptyError):
     """class AgentTimeout for WINPTY_ERROR_AGENT_TIMEOUT"""
     def __init__(self, err_msg):
         """init AgentTimeout with ``err_msg``"""
-        WinptyError.__init__(self, winpty.WINPTY_ERROR_AGENT_TIMEOUT, err_msg)
+        super().__init__(winpty.WINPTY_ERROR_AGENT_TIMEOUT, err_msg)
 class AgentCreationFailed(WinptyError):
     """class AgentCreationFailed for WINPTY_ERROR_AGENT_CREATION_FAILED"""
     def __init__(self, err_msg):
         """init AgentCreationFailed with ``err_msg``"""
-        WinptyError.__init__(self, winpty.WINPTY_ERROR_AGENT_CREATION_FAILED, err_msg)
-class RespawnError(WinptyError):
+        super().__init__(winpty.WINPTY_ERROR_AGENT_CREATION_FAILED, err_msg)
+class RespawnError(YawinptyError):
     """class RespawnError
     raised if call ``spawn`` method on one ``Pty`` instance more than once"""
     def __init__(self):
-        WinptyError.__init__(self, None, 'Cannot spawn on one ``Pty`` instance more than once')
+        super().__init__('Cannot spawn on one ``Pty`` instance more than once')
 if sys.version_info >= (3, 4):
     class WError(OSError):
         pass
 else:
     class WError(Exception):
         def __init__(self, errno, strerror, filename = None, winerror = None, filename2 = None):
-            Exception.__init__(self)
+            super().__init__()
             self.errno = errno
             self.strerror = strerror
             self.filename = filename
             self.winerror = winerror
             self.filename2 = filename2
-class WinError(WError, WinptyError):
+class WinError(WError, YawinptyError):
     """windows error"""
     def __init__(self, err_code):
         """init WinError with ``err_code`` got from ``GetLastError()``"""
@@ -204,8 +206,7 @@ class WinError(WError, WinptyError):
         msg = ws2str(buf)
         if winpty.LocalFree(buf) != NULL:
             WinError._raise_lasterror()
-        WError.__init__(self, None, msg, None, err_code)
-        WinptyError.__init__(self, None, msg)
+        super().__init__(None, msg, None, err_code)
     @classmethod
     def _from_lasterror(cls):
         """return WinError by last error of windows
@@ -216,25 +217,24 @@ class WinError(WError, WinptyError):
         """raise WinError by last error of windows
         for internal use"""
         raise cls._from_lasterror()
-class SpecifiedSpawnCreateProcessFailed(SpawnCreateProcessFailed, WinError):
+class SpecifiedSpawnCreateProcessFailed(WinError):
     """class SpecifiedSpawnCreateProcessFailed for WINPTY_ERROR_SPAWN_CREATE_PROCESS_FAILED
     with known OS error code from ``GetLastError()``"""
-    def __init__(self, os_err_code, err_msg):
-        SpawnCreateProcessFailed.__init__(self, err_msg)
-        WinError.__init__(self, os_err_code)
-class SubprocessError(WinptyError):
+    def __init__(self, os_err_code):
+        super().__init__(os_err_code)
+class SubprocessError(YawinptyError):
     """class SubprocessError for error of subprocess"""
     def __init__(self, process_id, err_msg):
-        WinptyError.__init__(self, None, err_msg)
+        super().__init__(err_msg)
         self.process_id = process_id
 class TimeoutExpired(SubprocessError):
     """class TimeoutExpired for time expired in waiting"""
     def __init__(self, process_id):
-        SubprocessError.__init__(self, process_id, 'Timeout expired')
+        super().__init__(process_id, 'Timeout expired')
 class ExitNonZero(SubprocessError):
     """class ExitNonZero for non-zero exitcode of subprocess"""
     def __init__(self, process_id, exitcode):
-        SubprocessError.__init__(self, process_id, 'Exit with non-zero')
+        super().__init__(process_id, 'Exit with non-zero')
         self.exitcode = exitcode
 
 class _Flag:
@@ -507,7 +507,7 @@ cdef class Pty:
             errobj = create_ErrorObject(err)
             err_type = WinptyError._from_errobj(errobj)
             if err_type is SpawnCreateProcessFailed:
-                raise SpecifiedSpawnCreateProcessFailed(ec, errobj.get_msg())
+                raise SpecifiedSpawnCreateProcessFailed(ec)
             else:
                 WinptyError._raise_errobj(errobj)
         if rv == 0:
