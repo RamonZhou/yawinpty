@@ -1,5 +1,5 @@
 cimport winpty
-from sys import version_info
+import sys
 
 __version__ = '0.4.3.dev4'
 
@@ -181,7 +181,7 @@ class RespawnError(WinptyError):
     raised if call ``spawn`` method on one ``Pty`` instance more than once"""
     def __init__(self):
         WinptyError.__init__(self, None, 'Cannot spawn on one ``Pty`` instance more than once')
-if version_info >= (3, 4):
+if sys.version_info >= (3, 4):
     class WError(OSError):
         pass
 else:
