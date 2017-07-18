@@ -111,6 +111,7 @@ setup(
     license = 'MIT',
     platforms = ['Windows'],
     classifiers = classifiers(),
+    zip_safe = False,
     cmdclass = {
         'build_ext': build_winpty,
         'build_clib': build_winpty_agent},
