@@ -64,7 +64,7 @@ cdef class _ErrorObject:
     cdef winpty.winpty_error_ptr_t _errobj
     def __cinit__(self):
         """should not use this
-        use `create_ErrorObject` instead"""
+        use ``create_ErrorObject`` instead"""
         self._errobj = NULL
     def __dealloc__(self):
         """free the errobj"""
@@ -80,7 +80,7 @@ cdef class _ErrorObject:
             raise ValueError('NULL is not a valid errobj')
         return ws2str(winpty.winpty_error_msg(self._errobj))
 cdef create_ErrorObject(winpty.winpty_error_ptr_t errobj):
-    """create _ErrorObject with `winpty_error_ptr_t errobj`"""
+    """create _ErrorObject with ``winpty_error_ptr_t errobj``"""
     self = _ErrorObject()
     self._errobj = errobj
     return self
@@ -92,13 +92,13 @@ class WinptyError(RuntimeError):
 
     each error class maps a error code
 
-    `self.code` is the original code for internal use
+    ``self.code`` is the original code for internal use
 
-    `self.args[0]` is the textual representation of the error
+    ``self.args[0]`` is the textual representation of the error
     """
 
     def __init__(self, code, err_msg):
-        """init WinptyError with `code` and `err_msg`"""
+        """init WinptyError with ``code`` and ``err_msg``"""
         RuntimeError.__init__(self, err_msg)
         self.code = code
     @staticmethod
@@ -129,58 +129,58 @@ class WinptyError(RuntimeError):
 class UnknownError(WinptyError):
     """class UnknownError for unknown error code"""
     def __init__(self, code, err_msg):
-        """init UnknownError with `code` and `err_msg`"""
+        """init UnknownError with ``code`` and ``err_msg``"""
         WinptyError.__init__(self, code, err_msg)
 class UnknownUnknownError(UnknownError):
     """class UnknownUnknownError for unspecified error code"""
     def __init__(self, err_msg):
-        """init UnknownUnknownError with `err_msg`"""
+        """init UnknownUnknownError with ``err_msg``"""
         UnknownError.__init__(self, None, err_msg)
 class OutOfMemory(WinptyError, MemoryError):
     """class OutOfMemory for WINPTY_ERROR_OUT_OF_MEMORY"""
     def __init__(self, err_msg):
-        """init OutOfMemory with `err_msg`"""
+        """init OutOfMemory with ``err_msg``"""
         WinptyError.__init__(self, winpty.WINPTY_ERROR_OUT_OF_MEMORY, err_msg)
 class SpawnCreateProcessFailed(WinptyError):
     """class SpawnCreateProcessFailed for WINPTY_ERROR_SPAWN_CREATE_PROCESS_FAILED"""
     def __init__(self, err_msg):
-        """init SpawnCreateProcessFailed with `err_msg`"""
+        """init SpawnCreateProcessFailed with ``err_msg``"""
         WinptyError.__init__(self, winpty.WINPTY_ERROR_SPAWN_CREATE_PROCESS_FAILED, err_msg)
 class LoseConnection(WinptyError):
     """class LoseConnection for WINPTY_ERROR_LOST_CONNECTION"""
     def __init__(self, err_msg):
-        """init LoseConnection with `err_msg`"""
+        """init LoseConnection with ``err_msg``"""
         WinptyError.__init__(self, winpty.WINPTY_ERROR_LOST_CONNECTION, err_msg)
 class AgentExeMissing(WinptyError):
     """class AgentExeMissing for WINPTY_ERROR_AGENT_EXE_MISSING"""
     def __init__(self, err_msg):
-        """init AgentExeMissing with `err_msg`"""
+        """init AgentExeMissing with ``err_msg``"""
         WinptyError.__init__(self, winpty.WINPTY_ERROR_AGENT_EXE_MISSING, err_msg)
 class Unspecified(WinptyError):
     """class Unspecified for WINPTY_ERROR_UNSPECIFIED"""
     def __init__(self, err_msg):
-        """init Unspecified with `err_msg`"""
+        """init Unspecified with ``err_msg``"""
         WinptyError.__init__(self, winpty.WINPTY_ERROR_UNSPECIFIED, err_msg)
 class AgentDied(WinptyError):
     """class AgentDied for WINPTY_ERROR_AGENT_DIED"""
     def __init__(self, err_msg):
-        """init AgentDied with `err_msg`"""
+        """init AgentDied with ``err_msg``"""
         WinptyError.__init__(self, winpty.WINPTY_ERROR_AGENT_DIED, err_msg)
 class AgentTimeout(WinptyError):
     """class AgentTimeout for WINPTY_ERROR_AGENT_TIMEOUT"""
     def __init__(self, err_msg):
-        """init AgentTimeout with `err_msg`"""
+        """init AgentTimeout with ``err_msg``"""
         WinptyError.__init__(self, winpty.WINPTY_ERROR_AGENT_TIMEOUT, err_msg)
 class AgentCreationFailed(WinptyError):
     """class AgentCreationFailed for WINPTY_ERROR_AGENT_CREATION_FAILED"""
     def __init__(self, err_msg):
-        """init AgentCreationFailed with `err_msg`"""
+        """init AgentCreationFailed with ``err_msg``"""
         WinptyError.__init__(self, winpty.WINPTY_ERROR_AGENT_CREATION_FAILED, err_msg)
 class RespawnError(WinptyError):
     """class RespawnError
-    raised if call `spawn` method on one `Pty` instance more than once"""
+    raised if call ``spawn`` method on one ``Pty`` instance more than once"""
     def __init__(self):
-        WinptyError.__init__(self, None, 'Cannot spawn on one `Pty` instance more than once')
+        WinptyError.__init__(self, None, 'Cannot spawn on one ``Pty`` instance more than once')
 if version_info >= (3, 4):
     class WError(OSError):
         pass
@@ -196,7 +196,7 @@ else:
 class WinError(WError, WinptyError):
     """windows error"""
     def __init__(self, err_code):
-        """init WinError with `err_code` got from `GetLastError()`"""
+        """init WinError with ``err_code`` got from ``GetLastError()``"""
         cdef winpty.LPWSTR buf
         cdef winpty.DWORD rv = winpty.FormatMessageW(winpty.FORMAT_MESSAGE_ALLOCATE_BUFFER | winpty.FORMAT_MESSAGE_FROM_SYSTEM | winpty.FORMAT_MESSAGE_IGNORE_INSERTS, NULL, err_code, 0, <winpty.LPWSTR>&buf, 0, NULL)
         if rv == 0:
@@ -218,7 +218,7 @@ class WinError(WError, WinptyError):
         raise cls._from_lasterror()
 class SpecifiedSpawnCreateProcessFailed(SpawnCreateProcessFailed, WinError):
     """class SpecifiedSpawnCreateProcessFailed for WINPTY_ERROR_SPAWN_CREATE_PROCESS_FAILED
-    with known OS error code from `GetLastError()`"""
+    with known OS error code from ``GetLastError()``"""
     def __init__(self, os_err_code, err_msg):
         SpawnCreateProcessFailed.__init__(self, err_msg)
         WinError.__init__(self, os_err_code)
@@ -241,7 +241,6 @@ class _Flag:
     """class _Flag contains flags
 
     conerr
-    ======
      Create a new screen buffer (connected to the "conerr" terminal pipe) and
      pass it to child processes as the STDERR handle.  This flag also prevents
      the agent from reopening CONOUT$ when it polls -- regardless of whether the
@@ -249,17 +248,14 @@ class _Flag:
      primary screen buffer.
 
     plain_output
-    ============
      Don't output escape sequences.
 
     color_escapes
-    =============
      Do output color escape sequences.  These escapes are output by default, but
      are suppressed with WINPTY_FLAG_PLAIN_OUTPUT.  Use this flag to reenable
      them.
 
     allow_curproc_desktop_creation
-    ==============================
      On XP and Vista, winpty needs to put the hidden console on a desktop in a
      service window station so that its polling does not interfere with other
      (visible) console windows.  To create this desktop, it must change the
@@ -273,7 +269,6 @@ class _Flag:
      See https://github.com/rprichard/winpty/issues/58.
 
     mask
-    ====
      mask of flags"""
 
     conerr=             0x1
@@ -290,13 +285,11 @@ class _MouseMode:
     """class _MouseMode contains mouse modes
 
     none
-    ====
      QuickEdit mode is initially disabled, and the agent does not send mouse
      mode sequences to the terminal.  If it receives mouse input, though, it
      still writes MOUSE_EVENT_RECORD values into CONIN.
 
     auto
-    ====
      QuickEdit mode is initially enabled.  As CONIN enters or leaves mouse
      input mode (i.e. where ENABLE_MOUSE_INPUT is on and ENABLE_QUICK_EDIT_MODE
      is off), the agent enables or disables mouse input on the terminal.
@@ -304,7 +297,6 @@ class _MouseMode:
      This is the default mode.
 
     force
-    =====
      QuickEdit mode is initially disabled, and the agent enables the terminal's
      mouse input mode.  It does not disable terminal mouse mode (until exit)."""
 
@@ -318,8 +310,8 @@ cdef class Config:
     def __cinit__(self):
         self._cfg = NULL
     def __init__(self, *flags):
-        """init Config with `flags`
-        `flags` is combine of `Config.flag.*`"""
+        """init Config with ``flags``
+        ``flags`` is combine of ``Config.flag.*``"""
         cdef winpty.UINT64 rf = 0
         for flag in flags:
             rf |= <winpty.UINT64>flag
@@ -333,7 +325,7 @@ cdef class Config:
         """set initial size"""
         winpty.winpty_config_set_initial_size(self._cfg, cols, rows)
     def set_mouse_mode(self, mouse_mode):
-        """set mouse mode to `mouse_mode` which is one of `Config.mouse_mode`"""
+        """set mouse mode to ``mouse_mode`` which is one of ``Config.mouse_mode``"""
         winpty.winpty_config_set_mouse_mode(self._cfg, mouse_mode)
     def set_agent_timeout(self, timeout):
         """Amount of time (in ms) to wait for the agent to startup and to wait for any given
@@ -352,7 +344,6 @@ class _SpawnFlag:
     """class _SpawnFlag contains spawn flags
 
     auto_shutdown
-    =============
      If the spawn is marked "auto-shutdown", then the agent shuts down console
      output once the process exits.  The agent stops polling for new console
      output, and once all pending data has been written to the output pipe, the
@@ -361,7 +352,6 @@ class _SpawnFlag:
      return EOF.)
 
     exit_after_shutdown
-    ===================
      After the agent shuts down output, and after all output has been written
      into the pipe(s), exit the agent by closing the console.  If there any
      surviving processes still attached to the console, they are killed.
@@ -370,8 +360,7 @@ class _SpawnFlag:
      agent exits will fail with an I/O or dead-agent error.
 
     mask
-    ====
-    mask of flags"""
+     mask of flags"""
 
     auto_shutdown=1
     exit_after_shutdown=2
@@ -387,10 +376,10 @@ cdef class SpawnConfig:
         self._cfg = NULL
     def __init__(self, *spawnFlags, appname = None, cmdline = None, cwd = None, env = None):
         """init SpawnConfig
-        `spawnFlags` is a combine of `SpawnConfig.flag.*`
-        `env` is like `{'VAR1': 'VAL1', 'VAR2': 'VAL2'}`
+        ``spawnFlags`` is a combine of ``SpawnConfig.flag.*``
+        ``env`` is like ``{'VAR1': 'VAL1', 'VAR2': 'VAL2'}``
         N.B.: If you want to gather all of the child's output, you may want the
-        `auto_shutdown` flag."""
+        ``auto_shutdown`` flag."""
         cdef winpty.LPWSTR wappname = NULL, wcmdline = NULL, wcwd = NULL, wenv = NULL, temp = NULL
         cdef winpty.size_t envsz = 0
         cdef winpty.size_t tmpsz = 0
@@ -469,7 +458,7 @@ cdef class Pty:
         self._thread = NULL
         self._pty = NULL
     def __init__(self, Config config = Config()):
-        """start agent with `config`"""
+        """start agent with ``config``"""
         cdef winpty.winpty_error_ptr_t err
         with nogil:
             self._pty = winpty.winpty_open(config._cfg, &err)
@@ -503,7 +492,7 @@ cdef class Pty:
         """spawn process
         returns (process ID, thread ID) of spawned process
 
-        `spawn` can only be called once per Pty instance.  If it is called
+        ``spawn`` can only be called once per Pty instance.  If it is called
         before the output data pipe(s) is/are connected, then collected output is
         buffered until the pipes are connected, rather than being discarded."""
         if self._spawned != 0:
