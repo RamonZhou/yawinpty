@@ -1,7 +1,7 @@
 cimport winpty
 import sys
 
-__version__ = '0.4.3.dev4'
+__version__ = '0.4.3.dev5'
 
 cdef ws2str(winpty.LPCWSTR wmsg):
     """convert LPCWSTR to str"""
